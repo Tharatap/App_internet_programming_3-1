@@ -63,3 +63,51 @@ export const Spacing = {
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;
+
+/**
+ * Brand palette for the Chaje Electric shop UI (Phase 1). These are fixed
+ * light-theme design tokens taken from the design system in the spec — the
+ * shop screens deliberately stay light/minimal regardless of color scheme.
+ */
+export const Brand = {
+  /** Main page background */
+  background: '#FFFFFF',
+  /** Secondary surface: cards, search bar, banners */
+  surface: '#F7F7F7',
+  /** Slightly deeper surface for skeletons / image placeholders */
+  surfaceDeep: '#ECECEC',
+  /** Primary CTA accent (lime green) */
+  accent: '#D6F26A',
+  /** Text/icon that sits on the accent button */
+  onAccent: '#1A1A1A',
+  /** Primary text */
+  text: '#1A1A1A',
+  /** Secondary text */
+  textSecondary: '#7A7A7A',
+  /** Tertiary / muted text */
+  textMuted: '#9A9A9A',
+  /** Success / energy-saving badge */
+  successBg: '#EAF6E8',
+  successText: '#3B6D11',
+  /** Favorite / wishlist accent */
+  favoriteBg: '#FCEBEB',
+  favoriteIcon: '#D4537E',
+  /** Thin divider (used sparingly) */
+  divider: '#EFEFEF',
+  /** Out-of-stock label */
+  danger: '#D64545',
+  /** Notification dot */
+  notification: '#E5484D',
+  /** Inactive tab icon */
+  tabInactive: '#B0B0B0',
+} as const;
+
+export const Radius = {
+  sm: 8,
+  md: 12,
+  card: 18,
+  lg: 20,
+  /** pill / full round for CTA buttons */
+  pill: 28,
+} as const;
+
