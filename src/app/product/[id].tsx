@@ -14,6 +14,7 @@ import {
   Dimensions,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -26,12 +27,15 @@ import { Badge } from '@/components/shop/badge';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { FloatingHeader } from '@/components/shop/top-bar';
-import { Brand, Radius } from '@/constants/theme';
+import { AppFrameWidth, Brand, Radius } from '@/constants/theme';
 import { getProductById } from '@/data/mockProducts';
 import { useShop } from '@/store/shop-store';
 import { formatBaht } from '@/utils/format';
 
-const { width } = Dimensions.get('window');
+// Gallery page width follows the device width, but is capped to the app frame
+// width on web so images don't overflow the centered column.
+const windowWidth = Dimensions.get('window').width;
+const width = Platform.OS === 'web' ? Math.min(windowWidth, AppFrameWidth) : windowWidth;
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

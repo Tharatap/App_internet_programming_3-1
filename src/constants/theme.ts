@@ -65,6 +65,13 @@ export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;
 
 /**
+ * On web the app is constrained to a phone-sized column centered on screen so
+ * the mobile layout doesn't stretch across a wide desktop window. On native it
+ * is unused (screens fill the device).
+ */
+export const AppFrameWidth = 480;
+
+/**
  * Brand palette for the Chaje Electric shop UI (Phase 1). These are fixed
  * light-theme design tokens taken from the design system in the spec — the
  * shop screens deliberately stay light/minimal regardless of color scheme.
