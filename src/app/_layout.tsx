@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AppFrameWidth, Brand } from '@/constants/theme';
+import { CatalogProvider } from '@/store/catalog-store';
 import { ShopProvider } from '@/store/shop-store';
 
 SplashScreen.preventAutoHideAsync();
@@ -15,7 +16,8 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
-      <ShopProvider>
+      <CatalogProvider>
+        <ShopProvider>
         <StatusBar style="dark" />
         {/* On web, constrain the app to a centered phone-width column. */}
         <View style={styles.frame}>
@@ -30,7 +32,8 @@ export default function RootLayout() {
           </Stack>
           <AnimatedSplashOverlay />
         </View>
-      </ShopProvider>
+        </ShopProvider>
+      </CatalogProvider>
     </GestureHandlerRootView>
   );
 }

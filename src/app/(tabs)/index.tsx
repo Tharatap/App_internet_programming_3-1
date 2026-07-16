@@ -9,9 +9,8 @@ import { ProductCard } from '@/components/shop/product-card';
 import { SectionHeader } from '@/components/shop/section-header';
 import { TopBar } from '@/components/shop/top-bar';
 import { Brand, Radius } from '@/constants/theme';
-import { mockCategories } from '@/data/mockCategories';
-import { flashSaleProducts, recommendedProducts } from '@/data/mockProducts';
 import { useCountdown } from '@/hooks/use-countdown';
+import { useCatalog } from '@/store/catalog-store';
 import { Product } from '@/types/product';
 import { formatCountdown } from '@/utils/format';
 
@@ -19,6 +18,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const countdown = useCountdown(3 * 3600 + 23);
+  const { categories, flashSaleProducts, recommendedProducts } = useCatalog();
 
   const renderItem = useCallback(
     ({ item, index }: { item: Product; index: number }) => (
@@ -78,7 +78,7 @@ export default function HomeScreen() {
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.categoryRail}>
-                {mockCategories.map((cat) => (
+                {categories.map((cat) => (
                   <CategoryIcon
                     key={cat.id}
                     name={cat.icon}

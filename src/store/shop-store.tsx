@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
-import { mockProducts } from '@/data/mockProducts';
+import { useCatalog } from '@/store/catalog-store';
 import { CartItem, Product } from '@/types/product';
 
 /**
@@ -25,13 +25,19 @@ interface ShopContextValue {
 
 const ShopContext = createContext<ShopContextValue | null>(null);
 
-const seedCart: CartItem[] = [
-  { product: mockProducts[0], quantity: 1, selected: true },
-  { product: mockProducts[2], quantity: 2, selected: true },
-];
-
 export function ShopProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>(seedCart);
+  const { getProductById } = useCatalog();
+
+  // Seed a couple of demo items once, using whatever catalogue data is loaded
+  // (bundled fallback is available on the first render, so this is never empty).
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    const seed: CartItem[] = [];
+    const first = getProductById('p1');
+    const second = getProductById('p3');
+    if (first) seed.push({ product: first, quantity: 1, selected: true });
+    if (second) seed.push({ product: second, quantity: 2, selected: true });
+    return seed;
+  });
   const [favorites, setFavorites] = useState<Set<string>>(new Set(['p2', 'p5']));
 
   const addToCart = useCallback((product: Product, quantity = 1) => {

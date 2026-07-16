@@ -8,17 +8,18 @@ import { PressableScale } from '@/components/shop/pressable-scale';
 import { ProductCard } from '@/components/shop/product-card';
 import { TopBar } from '@/components/shop/top-bar';
 import { Brand, Radius } from '@/constants/theme';
-import { mockProducts } from '@/data/mockProducts';
+import { useCatalog } from '@/store/catalog-store';
 import { useShop } from '@/store/shop-store';
 
 export default function FavoritesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { favorites } = useShop();
+  const { products } = useCatalog();
 
   const favoriteProducts = useMemo(
-    () => mockProducts.filter((p) => favorites.has(p.id)),
-    [favorites]
+    () => products.filter((p) => favorites.has(p.id)),
+    [products, favorites]
   );
 
   return (

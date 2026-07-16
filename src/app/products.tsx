@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProductCard } from '@/components/shop/product-card';
 import { TopBar } from '@/components/shop/top-bar';
 import { Brand, Radius } from '@/constants/theme';
-import { getProductsByCategory, mockProducts } from '@/data/mockProducts';
+import { useCatalog } from '@/store/catalog-store';
 import { Product } from '@/types/product';
 
 const FILTERS = ['แนะนำ', 'ราคาต่ำ-สูง', 'ยี่ห้อ', 'ประหยัดไฟ'] as const;
@@ -16,9 +16,10 @@ export default function ProductListScreen() {
   const { category, title } = useLocalSearchParams<{ category?: string; title?: string }>();
   const insets = useSafeAreaInsets();
   const [active, setActive] = useState<Filter>('แนะนำ');
+  const { products: allProducts, getProductsByCategory } = useCatalog();
 
   const products = useMemo<Product[]>(() => {
-    const base = category ? getProductsByCategory(category) : mockProducts;
+    const base = category ? getProductsByCategory(category) : allProducts;
     const list = [...base];
     switch (active) {
       case 'ราคาต่ำ-สูง':
@@ -32,7 +33,7 @@ export default function ProductListScreen() {
       default:
         return list;
     }
-  }, [category, active]);
+  }, [category, active, allProducts, getProductsByCategory]);
 
   return (
     <View style={styles.screen}>

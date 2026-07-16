@@ -28,7 +28,7 @@ import { PressableScale } from '@/components/shop/pressable-scale';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { FloatingHeader } from '@/components/shop/top-bar';
 import { AppFrameWidth, Brand, Radius } from '@/constants/theme';
-import { getProductById } from '@/data/mockProducts';
+import { useCatalog } from '@/store/catalog-store';
 import { useShop } from '@/store/shop-store';
 import { formatBaht } from '@/utils/format';
 
@@ -42,6 +42,7 @@ export default function ProductDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { addToCart } = useShop();
+  const { getProductById } = useCatalog();
   const [page, setPage] = useState(0);
   const [expanded, setExpanded] = useState(false);
 

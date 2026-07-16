@@ -7,13 +7,13 @@ import { ProductCard } from '@/components/shop/product-card';
 import { SectionHeader } from '@/components/shop/section-header';
 import { TopBar } from '@/components/shop/top-bar';
 import { Brand } from '@/constants/theme';
-import { mockCategories } from '@/data/mockCategories';
-import { mockProducts } from '@/data/mockProducts';
+import { useCatalog } from '@/store/catalog-store';
 
 export default function CatalogScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const popular = mockProducts.slice(0, 4);
+  const { products, categories } = useCatalog();
+  const popular = products.slice(0, 4);
 
   return (
     <View style={styles.screen}>
@@ -22,7 +22,7 @@ export default function CatalogScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.grid}>
-          {mockCategories.map((cat) => (
+          {categories.map((cat) => (
             <CategoryIcon
               key={cat.id}
               name={cat.icon}
