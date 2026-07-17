@@ -15,9 +15,9 @@
  * หมายเหตุ: ถ้าดึงจาก GitHub ไม่สำเร็จ (เน็ตล่ม / ยังไม่ตั้งค่า) แอปจะใช้ไฟล์ JSON
  * ที่ bundle มากับแอปเป็น fallback โดยอัตโนมัติ
  */
-const GITHUB_USER = '<USER>';
-const GITHUB_REPO = '<REPO>';
-const GITHUB_BRANCH = 'main';
+const GITHUB_USER = 'Tharatap';
+const GITHUB_REPO = 'App_internet_programming_3-1';
+const GITHUB_BRANCH = 'master';
 
 export const DATA_BASE_URL = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/src/data`;
 
