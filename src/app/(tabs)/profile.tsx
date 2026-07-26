@@ -1,6 +1,8 @@
+import { useRouter } from 'expo-router';
 import {
   ChevronRight,
   Heart,
+  LogOut,
   MapPin,
   Package,
   Settings,
@@ -10,9 +12,12 @@ import {
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { PressableScale } from '@/components/shop/pressable-scale';
+import { RequireAuth } from '@/components/shop/require-auth';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { TopBar } from '@/components/shop/top-bar';
 import { Brand, Radius } from '@/constants/theme';
+import { useAuth } from '@/store/auth-store';
 
 interface MenuItem {
   icon: LucideIcon;
@@ -29,38 +34,55 @@ const menu: MenuItem[] = [
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { user, logout } = useAuth();
+
+  const onLogout = async () => {
+    await logout();
+    router.replace('/(auth)/login');
+  };
 
   return (
     <View style={styles.screen}>
       <TopBar variant="list" title="โปรไฟล์" />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
-        {/* User card */}
-        <View style={styles.userCard}>
-          <SkeletonImage style={styles.avatar} borderRadius={30} />
-          <View style={styles.userBody}>
-            <Text style={styles.userName}>คุณนินดาม</Text>
-            <Text style={styles.userSub}>p0878849749@gmail.com</Text>
+      <RequireAuth title="โปรไฟล์">
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
+          {/* User card */}
+          <View style={styles.userCard}>
+            <SkeletonImage uri={user?.avatarUrl ?? undefined} style={styles.avatar} borderRadius={30} />
+            <View style={styles.userBody}>
+              <Text style={styles.userName}>{user?.name ?? ''}</Text>
+              <Text style={styles.userSub}>{user?.email ?? ''}</Text>
+            </View>
           </View>
-        </View>
 
-        {/* Menu */}
-        <View style={styles.menu}>
-          {menu.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <Pressable
-                key={item.label}
-                style={[styles.menuRow, index < menu.length - 1 && styles.menuDivider]}>
-                <Icon size={20} color={Brand.text} strokeWidth={1.75} />
-                <Text style={styles.menuLabel}>{item.label}</Text>
-                <ChevronRight size={18} color={Brand.textMuted} strokeWidth={2} />
-              </Pressable>
-            );
-          })}
-        </View>
-      </ScrollView>
+          {/* Menu */}
+          <View style={styles.menu}>
+            {menu.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <Pressable
+                  key={item.label}
+                  style={[styles.menuRow, index < menu.length - 1 && styles.menuDivider]}>
+                  <Icon size={20} color={Brand.text} strokeWidth={1.75} />
+                  <Text style={styles.menuLabel}>{item.label}</Text>
+                  <ChevronRight size={18} color={Brand.textMuted} strokeWidth={2} />
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <PressableScale
+            style={styles.logoutButton}
+            onPress={onLogout}
+            accessibilityLabel="ออกจากระบบ">
+            <LogOut size={18} color={Brand.danger} strokeWidth={2} />
+            <Text style={styles.logoutText}>ออกจากระบบ</Text>
+          </PressableScale>
+        </ScrollView>
+      </RequireAuth>
     </View>
   );
 }
@@ -117,5 +139,17 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     color: Brand.text,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+  },
+  logoutText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Brand.danger,
   },
 });

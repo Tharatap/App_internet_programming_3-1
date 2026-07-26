@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Checkbox } from '@/components/shop/checkbox';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { QuantityStepper } from '@/components/shop/quantity-stepper';
+import { RequireAuth } from '@/components/shop/require-auth';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { TopBar } from '@/components/shop/top-bar';
 import { Brand, Radius } from '@/constants/theme';
@@ -27,6 +28,7 @@ export default function CartScreen() {
     <View style={styles.screen}>
       <TopBar variant="list" title="ตะกร้าสินค้า" />
 
+      <RequireAuth title="ตะกร้าสินค้า">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}>
@@ -66,7 +68,11 @@ export default function CartScreen() {
                     checked={item.selected}
                     onToggle={() => toggleCartSelected(item.product.id)}
                   />
-                  <SkeletonImage style={styles.itemImage} borderRadius={Radius.md} />
+                  <SkeletonImage
+                    uri={item.product.images[0]}
+                    style={styles.itemImage}
+                    borderRadius={Radius.md}
+                  />
                   <View style={styles.itemBody}>
                     <Text style={styles.itemName} numberOfLines={2}>
                       {item.product.name}
@@ -99,6 +105,7 @@ export default function CartScreen() {
           </PressableScale>
         </View>
       ) : null}
+      </RequireAuth>
     </View>
   );
 }

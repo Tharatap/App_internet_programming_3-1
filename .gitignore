@@ -41,3 +41,7 @@ example
 # generated native folders
 /ios
 /android
+
+# backend secrets (server credentials, JWT secret)
+.env
+server/.env

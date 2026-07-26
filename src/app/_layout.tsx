@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AppFrameWidth, Brand } from '@/constants/theme';
+import { AuthProvider } from '@/store/auth-store';
 import { CatalogProvider } from '@/store/catalog-store';
 import { ShopProvider } from '@/store/shop-store';
 
@@ -16,24 +17,27 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
-      <CatalogProvider>
-        <ShopProvider>
-        <StatusBar style="dark" />
-        {/* On web, constrain the app to a centered phone-width column. */}
-        <View style={styles.frame}>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: Brand.background },
-            }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="product/[id]" />
-            <Stack.Screen name="products" />
-          </Stack>
-          <AnimatedSplashOverlay />
-        </View>
-        </ShopProvider>
-      </CatalogProvider>
+      <AuthProvider>
+        <CatalogProvider>
+          <ShopProvider>
+            <StatusBar style="dark" />
+            {/* On web, constrain the app to a centered phone-width column. */}
+            <View style={styles.frame}>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: Brand.background },
+                }}>
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="product/[id]" />
+                <Stack.Screen name="products" />
+              </Stack>
+              <AnimatedSplashOverlay />
+            </View>
+          </ShopProvider>
+        </CatalogProvider>
+      </AuthProvider>
     </GestureHandlerRootView>
   );
 }

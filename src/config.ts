@@ -29,3 +29,12 @@ export const CATEGORIES_URL = `${DATA_BASE_URL}/categories.json`;
  * หรือยังไม่ได้อัปโหลดขึ้น GitHub
  */
 export const USE_REMOTE_DATA = true;
+
+/**
+ * Backend API (Express + MySQL) ที่รันอยู่บนเซิร์ฟเวอร์อาจารย์ — ดู server/README.md
+ * Assigned backend port = 3059 (แจ้งตอน SSH login วันที่ deploy)
+ *
+ * ใช้ตอนต่อ auth-store / cart / orders (PART B ใน Phase1.md) — ยังไม่ถูกใช้งานจริง
+ * จนกว่าจะเขียน src/api/client.ts และ src/store/auth-store.tsx
+ */
+export const API_BASE_URL = 'http://119.59.102.161:3059/api';
