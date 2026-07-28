@@ -8,7 +8,7 @@ import {
   Share2,
   SlidersHorizontal,
 } from 'lucide-react-native';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, Share, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HeartButton } from '@/components/shop/heart-button';
@@ -97,9 +97,34 @@ function ListBar({ title, showBack, showFilter, onFilter, onOptions, paddingTop 
 }
 
 /** Floating header used on the product detail screen (overlays the image). */
-export function FloatingHeader({ productId }: { productId: string }) {
+export function FloatingHeader({
+  productId,
+  productName,
+}: {
+  productId: string;
+  /** Included in the shared text/link when the user taps the share button. */
+  productName?: string;
+}) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+
+  const onShare = async () => {
+    const url = `myprofileappnindam://product/${productId}`;
+    const message = productName ? `${productName}\n${url}` : url;
+
+    if (Platform.OS === 'web') {
+      const nav = (globalThis as { navigator?: Navigator }).navigator as
+        | (Navigator & { share?: (data: { title?: string; text?: string; url?: string }) => Promise<void> })
+        | undefined;
+      if (nav?.share) {
+        await nav.share({ title: productName, text: message, url });
+      }
+      return;
+    }
+
+    await Share.share({ message });
+  };
+
   return (
     <View style={[styles.floating, { top: insets.top + 8 }]} pointerEvents="box-none">
       <IconButton variant="floating" onPress={() => router.back()} accessibilityLabel="ย้อนกลับ">
@@ -107,7 +132,7 @@ export function FloatingHeader({ productId }: { productId: string }) {
       </IconButton>
       <View style={styles.floatingRight}>
         <HeartButton productId={productId} size={20} />
-        <IconButton variant="floating" accessibilityLabel="แชร์">
+        <IconButton variant="floating" onPress={onShare} accessibilityLabel="แชร์">
           <Share2 size={18} color={Brand.text} strokeWidth={2} />
         </IconButton>
       </View>

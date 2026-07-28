@@ -1,5 +1,6 @@
+import { useRouter } from 'expo-router';
 import { ChevronRight, MapPin } from 'lucide-react-native';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Checkbox } from '@/components/shop/checkbox';
@@ -14,6 +15,7 @@ import { formatBaht } from '@/utils/format';
 
 export default function CartScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const {
     cart,
     selectedTotal,
@@ -24,6 +26,14 @@ export default function CartScreen() {
 
   const allSelected = cart.length > 0 && cart.every((item) => item.selected);
 
+  const onCheckout = () => {
+    if (!cart.some((item) => item.selected)) {
+      Alert.alert('กรุณาเลือกสินค้า', 'เลือกสินค้าอย่างน้อย 1 ชิ้นก่อนชำระเงิน');
+      return;
+    }
+    router.push('/checkout/address');
+  };
+
   return (
     <View style={styles.screen}>
       <TopBar variant="list" title="ตะกร้าสินค้า" />
@@ -33,7 +43,7 @@ export default function CartScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}>
         {/* Delivery address */}
-        <Pressable style={styles.address}>
+        <Pressable style={styles.address} onPress={() => router.push('/addresses')}>
           <MapPin size={18} color={Brand.text} strokeWidth={2} />
           <View style={styles.addressBody}>
             <Text style={styles.addressLabel}>จัดส่งไปที่</Text>

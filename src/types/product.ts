@@ -34,6 +34,8 @@ export interface Product {
   id: string;
   name: string;
   categoryId: string;
+  /** Brand name, e.g. "Samsung" — optional since older bundled/GitHub fallback data may omit it. */
+  brand?: string;
   /** Current selling price in THB. */
   price: number;
   /** Original price before discount (undefined when not on sale). */

@@ -1,15 +1,17 @@
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Leaf, Search } from 'lucide-react-native';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { notificationsApi } from '@/api/notifications';
 import { CategoryIcon } from '@/components/shop/category-icon';
 import { ProductCard } from '@/components/shop/product-card';
 import { SectionHeader } from '@/components/shop/section-header';
 import { TopBar } from '@/components/shop/top-bar';
 import { Brand, Radius } from '@/constants/theme';
 import { useCountdown } from '@/hooks/use-countdown';
+import { useAuth } from '@/store/auth-store';
 import { useCatalog } from '@/store/catalog-store';
 import { Product } from '@/types/product';
 import { formatCountdown } from '@/utils/format';
@@ -19,6 +21,21 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const countdown = useCountdown(3 * 3600 + 23);
   const { categories, flashSaleProducts, recommendedProducts } = useCatalog();
+  const { token } = useAuth();
+  const [hasUnread, setHasUnread] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!token) {
+        setHasUnread(false);
+        return;
+      }
+      notificationsApi
+        .list(token)
+        .then((list) => setHasUnread(list.some((n) => !n.isRead)))
+        .catch(() => {});
+    }, [token])
+  );
 
   const renderItem = useCallback(
     ({ item, index }: { item: Product; index: number }) => (
@@ -32,9 +49,9 @@ export default function HomeScreen() {
       <TopBar
         variant="home"
         address="92 ถ.สุขุมวิท กรุงเทพฯ"
-        hasNotification
-        onSettings={() => {}}
-        onNotification={() => {}}
+        hasNotification={hasUnread}
+        onSettings={() => router.push('/settings')}
+        onNotification={() => router.push('/notifications')}
       />
 
       <FlatList
@@ -48,9 +65,7 @@ export default function HomeScreen() {
         ListHeaderComponent={
           <View style={styles.header}>
             {/* Search bar */}
-            <Pressable
-              style={styles.search}
-              onPress={() => router.push('/products?title=ค้นหาสินค้า')}>
+            <Pressable style={styles.search} onPress={() => router.push('/search')}>
               <Search size={18} color={Brand.textMuted} strokeWidth={2} />
               <Text style={styles.searchPlaceholder}>ค้นหาสินค้าเครื่องใช้ไฟฟ้า</Text>
             </Pressable>

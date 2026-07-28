@@ -3,7 +3,9 @@
 > **สำหรับ AI:** อ่านไฟล์นี้ก่อนเริ่มงานเสมอ เพื่อไม่ต้องสำรวจโค้ดซ้ำ (ประหยัด token)
 > **ทำงานเสร็จแต่ละก้อน → กลับมาอัปเดตไฟล์นี้ทันที** (ดูวิธีอัปเดตท้ายไฟล์)
 
-**อัปเดตล่าสุด:** 2026-07-27 · **สถานะรวม:** Phase 1 เสร็จ 100% · Phase 2: PART A (backend) ✅ deploy สำเร็จ+ทดสอบผ่านหมด · PART B (เชื่อม frontend เข้า API) ✅ เขียนเสร็จ ผ่าน typecheck 0 error · ยังไม่ได้ทดสอบจริงบนมือถือ/เว็บ
+**อัปเดตล่าสุด:** 2026-07-27 · **สถานะรวม:** Phase 1 เสร็จ 100% · Phase 2: PART A (backend) ✅ deploy สำเร็จ+ทดสอบผ่านหมด ·
+PART B (auth+เชื่อม API) ✅ เขียนเสร็จ · PART C (ทำให้ปุ่มที่เหลือใช้งานได้จริง) ✅ เขียนเสร็จ ผ่าน typecheck 0 error ·
+**ยังไม่ได้ทดสอบจริงบนมือถือ/เว็บทั้ง PART B และ C** (ต้องเปิด SSH รัน `node server.js` ค้างไว้ก่อนถึงจะเทสต์ได้)
 
 ---
 
@@ -165,14 +167,62 @@ Backend (Express + MySQL) · ระบบสมาชิก (JWT) · ที่�
 - **iOS ไม่ได้ตั้ง ATS exception** — ตั้งแค่ Android (`usesCleartextTraffic`) เพราะโปรเจกต์นี้เทสต์บน
   web/Android เป็นหลัก ถ้าต้องรันบน iOS จริงต้องเพิ่ม `NSAppTransportSecurity` exception ด้วย
 
-### ขั้นต่อไป → PART C (ทำให้ปุ่มที่เหลือใช้งานได้จริง — ดูรายละเอียดเต็มใน `Phase1.md`)
-1. **ทดสอบ PART B ก่อน** (สมัคร/ล็อกอินจากแอปจริง ผ่าน browser ที่ `npx expo start --web`)
-2. ค้นหาสินค้าจริง (`src/app/search.tsx`)
-3. ตัวกรองขั้นสูง (`filter-sheet.tsx`)
-4. Checkout flow: `checkout/address.tsx` → `summary.tsx` → `success.tsx` (ต้องเขียน `src/api/orders.ts`,
-   `src/api/addresses.ts` เพิ่ม — ยังไม่มี)
-5. เมนูโปรไฟล์ที่เหลือ: คำสั่งซื้อ, ที่อยู่จัดส่ง, คูปอง, ตั้งค่า, แจ้งเตือน
-6. ปุ่ม share, ปุ่ม info ผ่อนชำระ
+## ✅ PART C — ทำให้ปุ่มที่เหลือทั้งหมดใช้งานได้จริง (เขียนโค้ดเสร็จแล้ว — `tsc --noEmit` ผ่าน 0 error)
+
+**⚠️ ยังไม่ได้ทดสอบจริงบนแอป** เช่นเดียวกับ PART B — ต้องเปิด SSH รัน `node server.js` ค้างไว้ก่อน
+ไม่มี `onPress={() => {}}` เหลืออยู่ในโค้ดแล้ว (เช็คด้วย grep แล้ว)
+
+### ไฟล์ใหม่ — types + API modules
+| ไฟล์ | หน้าที่ |
+|------|---------|
+| `src/types/shop.ts` | `Address`, `AddressInput`, `Order`, `OrderItem`, `OrderStatus`, `AppNotification`, `Coupon` |
+| `src/api/addresses.ts` | list/create/update/remove |
+| `src/api/orders.ts` | create (checkout) / list / detail |
+| `src/api/notifications.ts` | list / markRead |
+| `src/api/coupons.ts` | list |
+| `src/api/users.ts` | updateSettings (theme/language/notifyPromo) |
+| `src/utils/search-history.ts` | ประวัติค้นหา — **ใช้ `secureStorage` เดิมซ้ำ** ไม่ได้เพิ่ม AsyncStorage dependency ใหม่ |
+
+### ไฟล์ใหม่ — component ใช้ซ้ำ
+| ไฟล์ | หน้าที่ |
+|------|---------|
+| `src/components/shop/filter-sheet.tsx` | bottom sheet ตัวกรอง: ยี่ห้อ/ช่วงราคา/เบอร์ประหยัดไฟ/สต๊อก — กรอง**ฝั่ง client**ทั้งหมด (ไม่ยิง API ใหม่ เพราะ catalog แค่ 12 ชิ้นโหลดมาหมดแล้วผ่าน catalog-store) |
+| `src/components/shop/address-card.tsx` | การ์ดที่อยู่ ใช้ทั้งหน้า checkout (โหมดเลือก) และหน้าจัดการที่อยู่ (โหมด edit/delete) |
+
+### ไฟล์ใหม่ — หน้าจอ
+| หน้า | ไฟล์ | หมายเหตุ |
+|------|------|----------|
+| ค้นหา | `src/app/search.tsx` | กรอง**ฝั่ง client**จาก `useCatalog().products` (ชื่อ/คำอธิบาย/ยี่ห้อ) debounce 300ms + ประวัติค้นหา |
+| ที่อยู่จัดส่ง (จัดการ) | `src/app/addresses/index.tsx` + `edit.tsx` | list + เพิ่ม/แก้/ลบ/ตั้งค่าเริ่มต้น |
+| Checkout | `src/app/checkout/_layout.tsx`, `address.tsx`, `summary.tsx`, `success.tsx` | ครบ flow: เลือกที่อยู่ → สรุป (คำนวณค่าส่งฝั่ง client แบบเดียวกับ server: subtotal≥500 ฟรี ไม่งั้น 50) → ยืนยัน (`ordersApi.create`) → สำเร็จ |
+| คำสั่งซื้อ | `src/app/orders/index.tsx` + `[id].tsx` | list + รายละเอียด พร้อม status badge (5 สถานะ) |
+| คูปอง | `src/app/coupons.tsx` | list อย่างเดียว (**ยังไม่ได้ผูกเข้ากับ checkout** — ดูข้อจำกัดด้านล่าง) |
+| ตั้งค่า | `src/app/settings.tsx` | ธีม/ภาษา (เก็บฝั่ง server ผ่าน `usersApi`, ไม่ได้เปลี่ยนหน้าตาแอปจริงเพราะ design system ตั้งใจให้ shop เป็น light theme เสมอ) + แจ้งเตือนโปรโมชัน + ล้างแคชค้นหา + ออกจากระบบ |
+| แจ้งเตือน | `src/app/notifications.tsx` | list + tap เพื่อ mark read |
+
+### ไฟล์ที่แก้ (wire ปุ่มที่มีอยู่แล้ว)
+| ไฟล์ | เปลี่ยนอะไร |
+|------|-------------|
+| `src/types/product.ts` | เพิ่ม `brand?: string` (optional — bundled/GitHub fallback อาจไม่มี) |
+| `src/data/products.json` | เพิ่ม `brand` ให้ครบ 12 ตัว ให้ตรงกับ `server/sql/seed.sql` (Samsung/Electrolux/Philips/Hatari/Sharp) — **หมายเหตุ: ก็อปปี้บน GitHub repo ยังไม่ sync ค่านี้ ต้อง push เองถ้าต้องการ** |
+| `src/app/(tabs)/index.tsx` | search bar → `/search` จริง · `onSettings`/`onNotification` → `/settings`, `/notifications` · จุดแดงผูกกับจำนวนแจ้งเตือนที่ยังไม่อ่านจริง (`useFocusEffect` + `notificationsApi.list`) |
+| `src/app/products.tsx` | เพิ่มปุ่ม "ตัวกรอง" (chip ท้ายแถว) เปิด `FilterSheet` · `showFilter`/`onFilter` ของ `TopBar` ถูกต่อจริงแล้ว |
+| `src/app/(tabs)/cart.tsx` | แถบที่อยู่ → `/addresses` · ปุ่ม "ชำระเงิน" → เช็คมีสินค้าเลือกไหม (ไม่มีจะ Alert เตือน) → `/checkout/address` |
+| `src/app/(tabs)/profile.tsx` | เมนู 5 ข้อ wire ครบ: คำสั่งซื้อ→`/orders`, ที่อยู่→`/addresses`, คูปอง→`/coupons`, โปรด→`/(tabs)/favorites`, ตั้งค่า→`/settings` |
+| `src/app/product/[id].tsx` | ปุ่ม info → เปิด Modal อธิบายเงื่อนไขผ่อนชำระ (ข้อความ static ไม่ได้ดึงจาก server) · ส่ง `productName` ให้ `FloatingHeader` |
+| `src/components/shop/top-bar.tsx` | `FloatingHeader` ปุ่ม share ใช้งานได้จริง: `navigator.share` บนเว็บ (ถ้า browser รองรับ), `Share.share()` ของ RN บนมือถือ — แชร์ deep link `myprofileappnindam://product/{id}` |
+| `src/app/_layout.tsx` | register route ใหม่ทั้งหมดใน `<Stack>`: search, settings, notifications, coupons, addresses/*, orders/*, checkout |
+
+### ⚠️ ข้อจำกัดที่รู้อยู่ (ไม่ใช่บั๊ก แต่ควรรู้)
+- **คูปองยังไม่ผูกเข้า checkout จริง** — หน้า `/coupons` แสดง list ได้ แต่หน้า checkout summary ยังไม่มีช่องกรอก/เลือกโค้ดส่วนลด (`discount` ใน order ตอนนี้เป็น 0 เสมอ) — ทำเพิ่มได้ทีหลังถ้าต้องการ
+- **ค่าส่งคำนวณฝั่ง client เป็นการประมาณ** ก่อนกดยืนยัน (เพื่อโชว์ preview) แต่**ยอดจริงคำนวณใหม่ฝั่ง server เสมอ** ตอน `POST /api/orders` (ตามกฎ A6 ใน `Phase1.md`) — สองฝั่งใช้สูตรเดียวกัน (subtotal≥500 ฟรี ไม่งั้น 50) จึงตรงกัน แต่ถ้าเปลี่ยนกฎค่าส่งต้องแก้ทั้ง 2 ที่
+- **ธีม/ภาษาในหน้าตั้งค่าเป็น cosmetic** — บันทึกลง server แต่ไม่เปลี่ยนหน้าตาแอปจริง (ตั้งใจ ตาม comment เดิมใน `theme.ts` ว่า shop UI เป็น light theme เสมอ)
+- **guest cart ไม่ merge ตอน login** (จดไว้ตั้งแต่ PART B ยังไม่ได้แก้)
+
+### ขั้นต่อไป → ทดสอบให้ครบ แล้วไป PART D (production hardening)
+1. **ต้องทดสอบ PART B + C ทั้งหมดก่อน** — เปิด SSH รัน `node server.js` ค้างไว้ → `npx expo start --web`
+   → เดิน flow เต็ม: สมัคร → ค้นหา → กรอง → เพิ่มตะกร้า → เพิ่มที่อยู่ → checkout → ดูคำสั่งซื้อ → แจ้งเตือน → ตั้งค่า → ออกจากระบบ
+2. Part D ใน `Phase1.md`: error boundary, offline banner, pull-to-refresh, pagination, ผูกคูปองเข้า checkout จริง
 
 ### 🖥️ ข้อมูลเซิร์ฟเวอร์ (ทดสอบ port แล้ว — อย่าทดสอบซ้ำ)
 
@@ -194,6 +244,11 @@ Backend (Express + MySQL) · ระบบสมาชิก (JWT) · ที่�
   (ยังไม่ถูกใช้งานจริงจนกว่าจะเขียน `src/api/client.ts` ใน PART B)
 - ⚠️ เจอปัญหา SSH connection reset ระหว่างพิมพ์คำสั่ง (`cd /app` แล้วหลุด) — น่าจะเป็น idle timeout
   ของเซิร์ฟเวอร์ปกติ วิธีแก้: reconnect ใหม่แล้วพิมพ์คำสั่งต่อเนื่องไม่ทิ้งช่วงนาน
+- ⚠️ **ยืนยันแล้วว่าเกิดขึ้นจริงระหว่างทดสอบแอปจากเบราว์เซอร์** — SSH หลุด → `node server.js` ตายไปด้วย
+  → แอปขึ้น "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้" (เพราะ error ที่รับไม่ใช่ ApiError แต่เป็น fetch ล้มเหลวระดับเน็ตเวิร์ก)
+  **นี่คือสาเหตุอันดับ 1 ที่ต้องเช็คก่อนเสมอถ้าแอป error ว่าเชื่อมต่อไม่ได้** — ให้เช็คว่า SSH/`node server.js`
+  ยังรันอยู่ไหมก่อนไปหาสาเหตุอื่น (CORS/extension ฯลฯ) จะไม่เสียเวลาไล่ผิดจุด
+  → รอ pm2 ได้รับอนุญาตจากอาจารย์ก่อนถึงจะแก้ปัญหานี้ถาวร (ดูหัวข้อด้านบน)
 
 **สรุปสถาปัตยกรรม:** `Expo App ──HTTP :30xx──► Express (บน /app) ──localhost:3306──► MySQL`
 

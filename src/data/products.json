@@ -3,6 +3,7 @@
     "id": "p1",
     "name": "แอร์ Inverter 12000 BTU",
     "categoryId": "air",
+    "brand": "Samsung",
     "price": 12900,
     "originalPrice": 15900,
     "images": [
@@ -48,6 +49,7 @@
     "id": "p2",
     "name": "แอร์ Inverter 9000 BTU",
     "categoryId": "air",
+    "brand": "Electrolux",
     "price": 10900,
     "originalPrice": 13900,
     "images": [
@@ -93,6 +95,7 @@
     "id": "p3",
     "name": "หม้อทอดไร้น้ำมัน 5L",
     "categoryId": "ricecooker",
+    "brand": "Electrolux",
     "price": 1290,
     "originalPrice": 1990,
     "images": [
@@ -137,6 +140,7 @@
     "id": "p4",
     "name": "ตู้เย็น 2 ประตู 7.4 คิว",
     "categoryId": "fridge",
+    "brand": "Electrolux",
     "price": 8990,
     "originalPrice": 10900,
     "images": [
@@ -181,6 +185,7 @@
     "id": "p5",
     "name": "สมาร์ททีวี 4K 55 นิ้ว",
     "categoryId": "tv",
+    "brand": "Philips",
     "price": 13900,
     "originalPrice": 17900,
     "images": [
@@ -226,6 +231,7 @@
     "id": "p6",
     "name": "เครื่องซักผ้าฝาบน 12 กก.",
     "categoryId": "washer",
+    "brand": "Samsung",
     "price": 7490,
     "images": [
       "https://images.samsung.com/is/image/samsung/p6pim/th/wa12cg5441byst/gallery/th-wa5000c-458372-wa12cg5441byst-536381338?$624_468_PNG$",
@@ -270,6 +276,7 @@
     "id": "p7",
     "name": "พัดลมตั้งพื้น 16 นิ้ว",
     "categoryId": "fan",
+    "brand": "Hatari",
     "price": 690,
     "originalPrice": 990,
     "images": [
@@ -314,6 +321,7 @@
     "id": "p8",
     "name": "หม้อหุงข้าวดิจิทัล 1.8L",
     "categoryId": "ricecooker",
+    "brand": "Sharp",
     "price": 1490,
     "images": [
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTim0QdGfwo_5bxW_HAGO6YP8WeWMhpPFEsYZ3cqj9y4Q&s=10",
@@ -357,6 +365,7 @@
     "id": "p9",
     "name": "ไมโครเวฟ 25 ลิตร",
     "categoryId": "microwave",
+    "brand": "Electrolux",
     "price": 2390,
     "originalPrice": 2990,
     "images": [
@@ -401,6 +410,7 @@
     "id": "p10",
     "name": "ตู้เย็นมินิบาร์ 3.2 คิว",
     "categoryId": "fridge",
+    "brand": "Electrolux",
     "price": 4290,
     "originalPrice": 5290,
     "images": [
@@ -445,6 +455,7 @@
     "id": "p11",
     "name": "สมาร์ททีวี 4K 43 นิ้ว",
     "categoryId": "tv",
+    "brand": "Philips",
     "price": 8990,
     "originalPrice": 11900,
     "images": [
@@ -490,6 +501,7 @@
     "id": "p12",
     "name": "พัดลมไอเย็น 8 ลิตร",
     "categoryId": "fan",
+    "brand": "Hatari",
     "price": 1990,
     "originalPrice": 2590,
     "images": [

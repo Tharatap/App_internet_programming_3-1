@@ -22,20 +22,21 @@ import { useAuth } from '@/store/auth-store';
 interface MenuItem {
   icon: LucideIcon;
   label: string;
+  href: '/orders' | '/addresses' | '/coupons' | '/(tabs)/favorites' | '/settings';
 }
-
-const menu: MenuItem[] = [
-  { icon: Package, label: 'คำสั่งซื้อของฉัน' },
-  { icon: MapPin, label: 'ที่อยู่จัดส่ง' },
-  { icon: Ticket, label: 'คูปองส่วนลด' },
-  { icon: Heart, label: 'รายการโปรด' },
-  { icon: Settings, label: 'ตั้งค่า' },
-];
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, logout } = useAuth();
+
+  const menu: MenuItem[] = [
+    { icon: Package, label: 'คำสั่งซื้อของฉัน', href: '/orders' },
+    { icon: MapPin, label: 'ที่อยู่จัดส่ง', href: '/addresses' },
+    { icon: Ticket, label: 'คูปองส่วนลด', href: '/coupons' },
+    { icon: Heart, label: 'รายการโปรด', href: '/(tabs)/favorites' },
+    { icon: Settings, label: 'ตั้งค่า', href: '/settings' },
+  ];
 
   const onLogout = async () => {
     await logout();
@@ -65,6 +66,7 @@ export default function ProfileScreen() {
               return (
                 <Pressable
                   key={item.label}
+                  onPress={() => router.push(item.href)}
                   style={[styles.menuRow, index < menu.length - 1 && styles.menuDivider]}>
                   <Icon size={20} color={Brand.text} strokeWidth={1.75} />
                   <Text style={styles.menuLabel}>{item.label}</Text>

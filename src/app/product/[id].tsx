@@ -12,6 +12,7 @@ import {
 import { useState } from 'react';
 import {
   Dimensions,
+  Modal,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Platform,
@@ -45,6 +46,7 @@ export default function ProductDetailScreen() {
   const { getProductById } = useCatalog();
   const [page, setPage] = useState(0);
   const [expanded, setExpanded] = useState(false);
+  const [infoVisible, setInfoVisible] = useState(false);
 
   const product = getProductById(id);
 
@@ -68,7 +70,7 @@ export default function ProductDetailScreen() {
 
   return (
     <View style={styles.screen}>
-      <FloatingHeader productId={product.id} />
+      <FloatingHeader productId={product.id} productName={product.name} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -123,7 +125,10 @@ export default function ProductDetailScreen() {
                 </Text>
               ) : null}
             </View>
-            <Pressable hitSlop={8} accessibilityLabel="ข้อมูลการผ่อนชำระ">
+            <Pressable
+              hitSlop={8}
+              accessibilityLabel="ข้อมูลการผ่อนชำระ"
+              onPress={() => setInfoVisible(true)}>
               <Info size={20} color={Brand.textMuted} strokeWidth={2} />
             </Pressable>
           </View>
@@ -202,6 +207,21 @@ export default function ProductDetailScreen() {
           <Text style={styles.deliveryText}>จัดส่งวันที่ 26 ก.ค.</Text>
         </View>
       </View>
+
+      <Modal visible={infoVisible} transparent animationType="fade" onRequestClose={() => setInfoVisible(false)}>
+        <Pressable style={styles.infoBackdrop} onPress={() => setInfoVisible(false)}>
+          <Pressable style={styles.infoCard} onPress={(e) => e.stopPropagation()}>
+            <Text style={styles.infoTitle}>เงื่อนไขการผ่อนชำระ</Text>
+            <Text style={styles.infoText}>
+              ผ่อนชำระผ่านบัตรเครดิตของธนาคารที่ร่วมรายการ 0% นานสูงสุด 10 เดือน
+              ยอดผ่อนต่อเดือนที่แสดงเป็นการประมาณการจากราคาสินค้าปัจจุบัน เงื่อนไขเป็นไปตามที่ธนาคารกำหนด
+            </Text>
+            <Pressable style={styles.infoCloseButton} onPress={() => setInfoVisible(false)}>
+              <Text style={styles.infoCloseText}>เข้าใจแล้ว</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -414,5 +434,43 @@ const styles = StyleSheet.create({
   deliveryText: {
     fontSize: 12,
     color: Brand.textSecondary,
+  },
+  infoBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  infoCard: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: Brand.background,
+    borderRadius: Radius.lg,
+    padding: 20,
+    gap: 12,
+  },
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Brand.text,
+  },
+  infoText: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: Brand.textSecondary,
+  },
+  infoCloseButton: {
+    marginTop: 4,
+    alignSelf: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: Radius.pill,
+    backgroundColor: Brand.accent,
+  },
+  infoCloseText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Brand.onAccent,
   },
 });

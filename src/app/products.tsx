@@ -5,6 +5,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProductCard } from '@/components/shop/product-card';
 import { TopBar } from '@/components/shop/top-bar';
+import {
+  defaultFilterValue,
+  FilterSheet,
+  FilterValue,
+} from '@/components/shop/filter-sheet';
 import { Brand, Radius } from '@/constants/theme';
 import { useCatalog } from '@/store/catalog-store';
 import { Product } from '@/types/product';
@@ -12,15 +17,48 @@ import { Product } from '@/types/product';
 const FILTERS = ['แนะนำ', 'ราคาต่ำ-สูง', 'ยี่ห้อ', 'ประหยัดไฟ'] as const;
 type Filter = (typeof FILTERS)[number];
 
+const PRICE_BOUNDS: Record<FilterValue['priceRange'], [number, number]> = {
+  all: [0, Infinity],
+  under1000: [0, 1000],
+  '1000to5000': [1000, 5000],
+  '5000to10000': [5000, 10000],
+  over10000: [10000, Infinity],
+};
+
 export default function ProductListScreen() {
   const { category, title } = useLocalSearchParams<{ category?: string; title?: string }>();
   const insets = useSafeAreaInsets();
   const [active, setActive] = useState<Filter>('แนะนำ');
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [filter, setFilter] = useState<FilterValue>(defaultFilterValue);
   const { products: allProducts, getProductsByCategory } = useCatalog();
 
+  const categoryProducts = useMemo(
+    () => (category ? getProductsByCategory(category) : allProducts),
+    [category, allProducts, getProductsByCategory]
+  );
+
+  const brands = useMemo(
+    () =>
+      Array.from(new Set(categoryProducts.map((p) => p.brand).filter((b): b is string => !!b))).sort(
+        (a, b) => a.localeCompare(b)
+      ),
+    [categoryProducts]
+  );
+
+  const filteredProducts = useMemo(() => {
+    const [min, max] = PRICE_BOUNDS[filter.priceRange];
+    return categoryProducts.filter((p) => {
+      if (filter.brand && p.brand !== filter.brand) return false;
+      if (p.price < min || p.price > max) return false;
+      if (filter.energyMin > 0 && (p.energySavingPercent ?? 0) < filter.energyMin) return false;
+      if (filter.inStockOnly && !p.inStock) return false;
+      return true;
+    });
+  }, [categoryProducts, filter]);
+
   const products = useMemo<Product[]>(() => {
-    const base = category ? getProductsByCategory(category) : allProducts;
-    const list = [...base];
+    const list = [...filteredProducts];
     switch (active) {
       case 'ราคาต่ำ-สูง':
         return list.sort((a, b) => a.price - b.price);
@@ -33,30 +71,50 @@ export default function ProductListScreen() {
       default:
         return list;
     }
-  }, [category, active, allProducts, getProductsByCategory]);
+  }, [filteredProducts, active]);
+
+  const activeFilterCount =
+    (filter.brand ? 1 : 0) +
+    (filter.priceRange !== 'all' ? 1 : 0) +
+    (filter.energyMin > 0 ? 1 : 0) +
+    (filter.inStockOnly ? 1 : 0);
 
   return (
     <View style={styles.screen}>
-      <TopBar variant="list" title={title ?? 'สินค้าทั้งหมด'} showBack showFilter />
+      <TopBar
+        variant="list"
+        title={title ?? 'สินค้าทั้งหมด'}
+        showBack
+        showFilter
+        onFilter={() => setFilterVisible(true)}
+      />
 
       <View style={styles.chipsWrapper}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.chips}>
-          {FILTERS.map((filter) => {
-            const selected = filter === active;
+          {FILTERS.map((filterOption) => {
+            const selected = filterOption === active;
             return (
               <Pressable
-                key={filter}
-                onPress={() => setActive(filter)}
+                key={filterOption}
+                onPress={() => setActive(filterOption)}
                 style={[styles.chip, selected && styles.chipSelected]}>
                 <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-                  {filter}
+                  {filterOption}
                 </Text>
               </Pressable>
             );
           })}
+          <Pressable
+            onPress={() => setFilterVisible(true)}
+            style={[styles.chip, activeFilterCount > 0 && styles.chipSelected]}>
+            <Text
+              style={[styles.chipText, activeFilterCount > 0 && styles.chipTextSelected]}>
+              ตัวกรอง{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+            </Text>
+          </Pressable>
         </ScrollView>
       </View>
 
@@ -70,8 +128,17 @@ export default function ProductListScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <Text style={styles.empty}>ไม่พบสินค้าในหมวดนี้</Text>
+          <Text style={styles.empty}>ไม่พบสินค้าที่ตรงกับตัวกรอง</Text>
         }
+      />
+
+      <FilterSheet
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        brands={brands}
+        value={filter}
+        onChange={setFilter}
+        resultCount={products.length}
       />
     </View>
   );

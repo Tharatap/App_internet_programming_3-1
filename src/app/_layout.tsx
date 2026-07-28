@@ -32,6 +32,15 @@ export default function RootLayout() {
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="product/[id]" />
                 <Stack.Screen name="products" />
+                <Stack.Screen name="search" />
+                <Stack.Screen name="settings" />
+                <Stack.Screen name="notifications" />
+                <Stack.Screen name="coupons" />
+                <Stack.Screen name="addresses/index" />
+                <Stack.Screen name="addresses/edit" />
+                <Stack.Screen name="orders/index" />
+                <Stack.Screen name="orders/[id]" />
+                <Stack.Screen name="checkout" />
               </Stack>
               <AnimatedSplashOverlay />
             </View>
