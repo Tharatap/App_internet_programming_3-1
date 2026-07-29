@@ -6,7 +6,7 @@ import { Badge } from '@/components/shop/badge';
 import { HeartButton } from '@/components/shop/heart-button';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
-import { Brand, Radius } from '@/constants/theme';
+import { Brand, PixelBorder, PixelFonts, PixelShadow, Radius } from '@/constants/theme';
 import { Product } from '@/types/product';
 import { formatBaht } from '@/utils/format';
 
@@ -28,6 +28,7 @@ export function ProductCard({ product, variant = 'grid', index = 0 }: Props) {
       <Animated.View entering={entering}>
         <PressableScale
           onPress={open}
+          pixelShadow={PixelShadow.sm}
           style={[styles.rowCard, !product.inStock && styles.dimmed]}>
           <SkeletonImage
             uri={product.images[0]}
@@ -58,6 +59,7 @@ export function ProductCard({ product, variant = 'grid', index = 0 }: Props) {
     <Animated.View entering={entering} style={styles.gridWrapper}>
       <PressableScale
         onPress={open}
+        pixelShadow={PixelShadow.sm}
         style={[styles.gridCard, !product.inStock && styles.dimmed]}>
         <View>
           <SkeletonImage
@@ -97,10 +99,10 @@ function PriceRow({ product }: { product: Product }) {
 const styles = StyleSheet.create({
   dimmed: { opacity: 0.55 },
   name: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 13,
+    fontFamily: PixelFonts.bodySemiBold,
     color: Brand.text,
-    lineHeight: 19,
+    lineHeight: 18,
   },
   badgeRow: {
     flexDirection: 'row',
@@ -114,12 +116,13 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   price: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 12,
+    fontFamily: PixelFonts.pixel,
     color: Brand.text,
   },
   originalPrice: {
-    fontSize: 12,
+    fontSize: 11,
+    fontFamily: PixelFonts.bodyRegular,
     color: Brand.textMuted,
     textDecorationLine: 'line-through',
   },
@@ -127,7 +130,8 @@ const styles = StyleSheet.create({
   gridWrapper: { flex: 1 },
   gridCard: {
     backgroundColor: Brand.surface,
-    borderRadius: Radius.card,
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
     padding: 10,
     gap: 8,
   },
@@ -149,7 +153,8 @@ const styles = StyleSheet.create({
   rowCard: {
     flexDirection: 'row',
     backgroundColor: Brand.surface,
-    borderRadius: Radius.card,
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
     padding: 12,
     gap: 12,
     alignItems: 'center',

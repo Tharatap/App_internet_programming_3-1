@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Badge } from '@/components/shop/badge';
 import { PressableScale } from '@/components/shop/pressable-scale';
-import { Brand, Radius } from '@/constants/theme';
+import { Brand, PixelBorder, PixelFonts, PixelShadow } from '@/constants/theme';
 import { Address } from '@/types/shop';
 
 interface Props {
@@ -20,6 +20,7 @@ export function AddressCard({ address, selected, onPress, onEdit, onDelete }: Pr
   return (
     <PressableScale
       style={[styles.card, selected && styles.cardSelected]}
+      pixelShadow={onPress ? PixelShadow.sm : undefined}
       onPress={onPress}
       disabled={!onPress}>
       <View style={styles.headerRow}>
@@ -27,7 +28,7 @@ export function AddressCard({ address, selected, onPress, onEdit, onDelete }: Pr
           <Text style={styles.label}>{address.label}</Text>
           {address.isDefault ? <Badge label="ค่าเริ่มต้น" tone="accent" /> : null}
         </View>
-        {selected ? <CheckCircle2 size={20} color={Brand.successText} strokeWidth={2} /> : null}
+        {selected ? <CheckCircle2 size={20} color={Brand.successBg} strokeWidth={2} /> : null}
       </View>
 
       <Text style={styles.recipient}>
@@ -60,15 +61,13 @@ export function AddressCard({ address, selected, onPress, onEdit, onDelete }: Pr
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Brand.surface,
-    borderRadius: Radius.card,
     padding: 16,
     gap: 6,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
   },
   cardSelected: {
-    borderColor: Brand.successText,
-    backgroundColor: Brand.successBg,
+    backgroundColor: '#EAF6E1',
   },
   headerRow: {
     flexDirection: 'row',
@@ -81,16 +80,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 14,
+    fontFamily: PixelFonts.headingBold,
     color: Brand.text,
   },
   recipient: {
-    fontSize: 14,
+    fontSize: 13,
+    fontFamily: PixelFonts.bodySemiBold,
     color: Brand.text,
   },
   line: {
-    fontSize: 13,
+    fontSize: 12,
+    fontFamily: PixelFonts.bodyRegular,
     color: Brand.textSecondary,
   },
   actions: {
@@ -104,7 +105,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   actionText: {
-    fontSize: 13,
+    fontSize: 12,
+    fontFamily: PixelFonts.bodyMedium,
     color: Brand.textSecondary,
   },
 });

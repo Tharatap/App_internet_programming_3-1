@@ -7,7 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Brand } from '@/constants/theme';
+import { Brand, PixelBorder } from '@/constants/theme';
 import { useShop } from '@/store/shop-store';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -15,7 +15,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 interface Props {
   productId: string;
   size?: number;
-  /** Circular white-ish background (for floating on card/image corners). */
+  /** Square pixel-bordered background (for floating on card/image corners). */
   withBackground?: boolean;
 }
 
@@ -50,8 +50,9 @@ export function HeartButton({ productId, size = 22, withBackground = true }: Pro
         withBackground && {
           width: dimension,
           height: dimension,
-          borderRadius: dimension / 2,
-          backgroundColor: active ? Brand.favoriteBg : 'rgba(255,255,255,0.85)',
+          borderWidth: PixelBorder.base,
+          borderColor: Brand.divider,
+          backgroundColor: active ? Brand.favoriteBg : 'rgba(255,253,245,0.9)',
           alignItems: 'center',
           justifyContent: 'center',
         },

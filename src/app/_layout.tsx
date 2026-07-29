@@ -1,8 +1,16 @@
 import 'react-native-reanimated';
 
+import { Kanit_400Regular, Kanit_500Medium, Kanit_600SemiBold, Kanit_700Bold } from '@expo-google-fonts/kanit';
+import {
+  NotoSansThai_400Regular,
+  NotoSansThai_500Medium,
+  NotoSansThai_600SemiBold,
+} from '@expo-google-fonts/noto-sans-thai';
+import { PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
 import { Platform, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -15,6 +23,24 @@ import { ShopProvider } from '@/store/shop-store';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    PressStart2P_400Regular,
+    Kanit_400Regular,
+    Kanit_500Medium,
+    Kanit_600SemiBold,
+    Kanit_700Bold,
+    NotoSansThai_400Regular,
+    NotoSansThai_500Medium,
+    NotoSansThai_600SemiBold,
+  });
+
+  // Keep the native splash screen up (already prevented from auto-hiding above)
+  // until the pixel-theme fonts are ready — AnimatedSplashOverlay is what
+  // actually calls SplashScreen.hideAsync() once it lays out.
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
     <GestureHandlerRootView style={styles.root}>
       <AuthProvider>

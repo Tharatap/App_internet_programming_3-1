@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 
-import { Brand } from '@/constants/theme';
+import { Brand, PixelBorder } from '@/constants/theme';
 
 interface Props {
   uri?: string;
@@ -37,6 +37,8 @@ export function SkeletonImage({ uri, style, borderRadius = 0 }: Props) {
 const styles = StyleSheet.create({
   base: {
     backgroundColor: Brand.surfaceDeep,
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
     overflow: 'hidden',
   },
 });

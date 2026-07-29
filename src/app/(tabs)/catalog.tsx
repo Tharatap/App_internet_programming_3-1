@@ -22,11 +22,12 @@ export default function CatalogScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.grid}>
-          {categories.map((cat) => (
+          {categories.map((cat, index) => (
             <CategoryIcon
               key={cat.id}
               name={cat.icon}
               label={cat.name}
+              paletteIndex={index}
               onPress={() => router.push(`/products?category=${cat.id}&title=${cat.name}`)}
             />
           ))}

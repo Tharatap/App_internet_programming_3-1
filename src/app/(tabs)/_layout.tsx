@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import { Heart, House, LayoutGrid, ShoppingCart, User } from 'lucide-react-native';
 import { Platform } from 'react-native';
 
-import { Brand } from '@/constants/theme';
+import { Brand, PixelBorder, PixelFonts } from '@/constants/theme';
 import { useShop } from '@/store/shop-store';
 
 export default function TabsLayout() {
@@ -15,11 +15,11 @@ export default function TabsLayout() {
         tabBarActiveTintColor: Brand.text,
         tabBarInactiveTintColor: Brand.tabInactive,
         tabBarShowLabel: true,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '500' },
+        tabBarLabelStyle: { fontSize: 10, fontFamily: PixelFonts.headingSemiBold },
         tabBarStyle: {
-          backgroundColor: Brand.background,
+          backgroundColor: Brand.surface,
           borderTopColor: Brand.divider,
-          borderTopWidth: 1,
+          borderTopWidth: PixelBorder.thick,
           height: Platform.select({ ios: 84, default: 64 }),
           paddingTop: 6,
         },

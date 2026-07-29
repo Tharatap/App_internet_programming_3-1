@@ -1,7 +1,7 @@
 import { Check } from 'lucide-react-native';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { Brand } from '@/constants/theme';
+import { Brand, PixelBorder } from '@/constants/theme';
 
 interface Props {
   checked: boolean;
@@ -9,7 +9,7 @@ interface Props {
   accessibilityLabel?: string;
 }
 
-/** Small rounded checkbox; fills lime green when checked. */
+/** Square pixel checkbox; fills lime green when checked. */
 export function Checkbox({ checked, onToggle, accessibilityLabel }: Props) {
   return (
     <Pressable
@@ -28,14 +28,13 @@ const styles = StyleSheet.create({
   box: {
     width: 22,
     height: 22,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: Brand.textMuted,
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
+    backgroundColor: Brand.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   boxChecked: {
     backgroundColor: Brand.accent,
-    borderColor: Brand.accent,
   },
 });

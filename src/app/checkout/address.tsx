@@ -8,7 +8,7 @@ import { AddressCard } from '@/components/shop/address-card';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, Radius } from '@/constants/theme';
+import { Brand, PixelBorder, PixelFonts, PixelShadow } from '@/constants/theme';
 import { useAuth } from '@/store/auth-store';
 import { Address } from '@/types/shop';
 
@@ -62,6 +62,7 @@ export default function CheckoutAddressScreen() {
           </PressableScale>
           <PressableScale
             style={[styles.primaryButton, !selectedId && styles.primaryButtonDisabled]}
+            pixelShadow={selectedId ? PixelShadow.sm : undefined}
             disabled={!selectedId}
             onPress={() => router.push(`/checkout/summary?addressId=${selectedId}`)}>
             <Text style={styles.primaryText}>ดำเนินการต่อ</Text>
@@ -84,6 +85,7 @@ const styles = StyleSheet.create({
   empty: {
     textAlign: 'center',
     marginTop: 60,
+    fontFamily: PixelFonts.bodyRegular,
     color: Brand.textSecondary,
     paddingHorizontal: 20,
   },
@@ -96,7 +98,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     gap: 10,
     backgroundColor: Brand.background,
-    borderTopWidth: 1,
+    borderTopWidth: PixelBorder.thick,
     borderTopColor: Brand.divider,
   },
   secondaryButton: {
@@ -104,13 +106,14 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   secondaryText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Brand.successText,
+    fontSize: 13,
+    fontFamily: PixelFonts.headingSemiBold,
+    color: Brand.successBg,
   },
   primaryButton: {
     backgroundColor: Brand.accent,
-    borderRadius: Radius.pill,
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
     paddingVertical: 16,
     alignItems: 'center',
   },
@@ -118,8 +121,8 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.surfaceDeep,
   },
   primaryText: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 13,
+    fontFamily: PixelFonts.pixel,
     color: Brand.onAccent,
   },
 });

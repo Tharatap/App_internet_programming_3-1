@@ -2,7 +2,7 @@ import { ChevronRight } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Badge } from '@/components/shop/badge';
-import { Brand } from '@/constants/theme';
+import { Brand, PixelFonts } from '@/constants/theme';
 
 interface Props {
   title: string;
@@ -42,8 +42,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   title: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: 16,
+    fontFamily: PixelFonts.headingBold,
     color: Brand.text,
   },
   seeAll: {
@@ -52,7 +52,8 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   seeAllText: {
-    fontSize: 13,
+    fontSize: 12,
+    fontFamily: PixelFonts.headingSemiBold,
     color: Brand.textSecondary,
   },
 });

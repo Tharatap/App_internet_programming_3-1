@@ -6,11 +6,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { addressesApi } from '@/api/addresses';
 import { ordersApi } from '@/api/orders';
 import { AddressCard } from '@/components/shop/address-card';
+import { PixelPanel } from '@/components/shop/pixel-panel';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, Radius } from '@/constants/theme';
+import { Brand, PixelBorder, PixelFonts, PixelShadow, Radius } from '@/constants/theme';
 import { useAuth } from '@/store/auth-store';
 import { useShop } from '@/store/shop-store';
 import { Address } from '@/types/shop';
@@ -64,7 +65,7 @@ export default function CheckoutSummaryScreen() {
           showsVerticalScrollIndicator={false}>
           {address ? (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>ที่อยู่จัดส่ง</Text>
+              <Text style={styles.sectionTitle}>ADDRESS</Text>
               <AddressCard address={address} />
             </View>
           ) : null}
@@ -95,7 +96,8 @@ export default function CheckoutSummaryScreen() {
             </View>
           </View>
 
-          <View style={styles.section}>
+          <PixelPanel style={styles.summaryCard}>
+            <Text style={styles.summaryHeading}>SUMMARY</Text>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>ยอดสินค้า</Text>
               <Text style={styles.summaryValue}>{formatBaht(selectedTotal)}</Text>
@@ -106,7 +108,12 @@ export default function CheckoutSummaryScreen() {
                 {shippingFee === 0 ? 'ฟรี' : formatBaht(shippingFee)}
               </Text>
             </View>
-          </View>
+            <View style={styles.dashedLine} />
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryTotalLabel}>ยอดรวม</Text>
+              <Text style={styles.summaryTotalValue}>{formatBaht(total)}</Text>
+            </View>
+          </PixelPanel>
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
         </ScrollView>
@@ -118,10 +125,11 @@ export default function CheckoutSummaryScreen() {
           </View>
           <PressableScale
             style={[styles.confirmButton, submitting && styles.confirmButtonDisabled]}
+            pixelShadow={submitting ? undefined : PixelShadow.sm}
             onPress={onConfirm}
             disabled={submitting}>
             <Text style={styles.confirmText}>
-              {submitting ? 'กำลังสั่งซื้อ...' : 'ยืนยันคำสั่งซื้อ'}
+              {submitting ? 'กำลังสั่งซื้อ...' : `PAY ${formatBaht(total)}`}
             </Text>
           </PressableScale>
         </View>
@@ -144,8 +152,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 11,
+    fontFamily: PixelFonts.pixel,
     color: Brand.text,
   },
   items: {
@@ -156,7 +164,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     backgroundColor: Brand.surface,
-    borderRadius: Radius.card,
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
     padding: 12,
   },
   itemImage: {
@@ -168,17 +177,27 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   itemName: {
-    fontSize: 13,
+    fontSize: 12,
+    fontFamily: PixelFonts.bodySemiBold,
     color: Brand.text,
-    fontWeight: '500',
   },
   itemQty: {
-    fontSize: 12,
+    fontSize: 11,
+    fontFamily: PixelFonts.bodyRegular,
     color: Brand.textSecondary,
   },
   itemTotal: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 12,
+    fontFamily: PixelFonts.pixel,
+    color: Brand.text,
+  },
+  summaryCard: {
+    padding: 14,
+    gap: 8,
+  },
+  summaryHeading: {
+    fontSize: 10,
+    fontFamily: PixelFonts.pixel,
     color: Brand.text,
   },
   summaryRow: {
@@ -186,15 +205,34 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   summaryLabel: {
-    fontSize: 14,
+    fontSize: 12,
+    fontFamily: PixelFonts.bodyRegular,
     color: Brand.textSecondary,
   },
   summaryValue: {
-    fontSize: 14,
+    fontSize: 12,
+    fontFamily: PixelFonts.bodyMedium,
+    color: Brand.text,
+  },
+  dashedLine: {
+    height: 2,
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: Brand.divider,
+  },
+  summaryTotalLabel: {
+    fontSize: 13,
+    fontFamily: PixelFonts.headingBold,
+    color: Brand.text,
+  },
+  summaryTotalValue: {
+    fontSize: 13,
+    fontFamily: PixelFonts.pixel,
     color: Brand.text,
   },
   error: {
-    fontSize: 13,
+    fontSize: 12,
+    fontFamily: PixelFonts.bodyMedium,
     color: Brand.danger,
     textAlign: 'center',
   },
@@ -207,7 +245,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     gap: 10,
     backgroundColor: Brand.background,
-    borderTopWidth: 1,
+    borderTopWidth: PixelBorder.thick,
     borderTopColor: Brand.divider,
   },
   totalRow: {
@@ -216,17 +254,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   totalLabel: {
-    fontSize: 14,
+    fontSize: 12,
+    fontFamily: PixelFonts.bodyRegular,
     color: Brand.textSecondary,
   },
   totalValue: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 16,
+    fontFamily: PixelFonts.pixel,
     color: Brand.text,
   },
   confirmButton: {
     backgroundColor: Brand.accent,
-    borderRadius: Radius.pill,
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
     paddingVertical: 16,
     alignItems: 'center',
   },
@@ -234,8 +274,8 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   confirmText: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 12,
+    fontFamily: PixelFonts.pixel,
     color: Brand.onAccent,
   },
 });

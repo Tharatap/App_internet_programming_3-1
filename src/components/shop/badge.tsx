@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
-import { Brand, Radius } from '@/constants/theme';
+import { Brand, PixelBorder, PixelFonts } from '@/constants/theme';
 
 type Tone = 'success' | 'accent' | 'neutral' | 'danger';
 
@@ -11,13 +11,13 @@ interface Props {
 }
 
 const toneStyles: Record<Tone, { bg: string; fg: string }> = {
-  success: { bg: Brand.successBg, fg: Brand.successText },
+  success: { bg: Brand.successBg, fg: '#FFFDF5' },
   accent: { bg: Brand.accent, fg: Brand.onAccent },
   neutral: { bg: Brand.surface, fg: Brand.textSecondary },
   danger: { bg: Brand.favoriteBg, fg: Brand.danger },
 };
 
-/** Small rounded pill label (energy-saving, ratings, discount, etc.). */
+/** Small rectangular pixel-bordered label (energy-saving, ratings, discount, etc.). */
 export function Badge({ label, tone = 'neutral', style }: Props) {
   const { bg, fg } = toneStyles[tone];
   return (
@@ -34,10 +34,11 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: Radius.sm,
+    borderWidth: PixelBorder.thin,
+    borderColor: Brand.divider,
   },
   text: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontFamily: PixelFonts.headingSemiBold,
   },
 });

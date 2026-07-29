@@ -3,9 +3,10 @@
 > **สำหรับ AI:** อ่านไฟล์นี้ก่อนเริ่มงานเสมอ เพื่อไม่ต้องสำรวจโค้ดซ้ำ (ประหยัด token)
 > **ทำงานเสร็จแต่ละก้อน → กลับมาอัปเดตไฟล์นี้ทันที** (ดูวิธีอัปเดตท้ายไฟล์)
 
-**อัปเดตล่าสุด:** 2026-07-27 · **สถานะรวม:** Phase 1 เสร็จ 100% · Phase 2: PART A (backend) ✅ deploy สำเร็จ+ทดสอบผ่านหมด ·
-PART B (auth+เชื่อม API) ✅ เขียนเสร็จ · PART C (ทำให้ปุ่มที่เหลือใช้งานได้จริง) ✅ เขียนเสร็จ ผ่าน typecheck 0 error ·
-**ยังไม่ได้ทดสอบจริงบนมือถือ/เว็บทั้ง PART B และ C** (ต้องเปิด SSH รัน `node server.js` ค้างไว้ก่อนถึงจะเทสต์ได้)
+**อัปเดตล่าสุด:** 2026-07-28 · **สถานะรวม:** Phase 1 เสร็จ 100% · Phase 2: PART A (backend) ✅ deploy สำเร็จ+ทดสอบผ่านหมด ·
+PART B (auth+เชื่อม API) ✅ เขียนเสร็จ+**ทดสอบผ่านจริงจากเบราว์เซอร์แล้ว** (login ใช้งานได้) ·
+PART C (ทำให้ปุ่มที่เหลือใช้งานได้จริง) ✅ เขียนเสร็จ ยังไม่ทดสอบครบทุก flow ·
+🎨 **Pixel Theme Reskin** ✅ เขียนเสร็จทั้งแอป ผ่าน typecheck 0 error + bundle สำเร็จ ยังไม่ได้ดูจริงบนอุปกรณ์
 
 ---
 
@@ -223,6 +224,75 @@ Backend (Express + MySQL) · ระบบสมาชิก (JWT) · ที่�
 1. **ต้องทดสอบ PART B + C ทั้งหมดก่อน** — เปิด SSH รัน `node server.js` ค้างไว้ → `npx expo start --web`
    → เดิน flow เต็ม: สมัคร → ค้นหา → กรอง → เพิ่มตะกร้า → เพิ่มที่อยู่ → checkout → ดูคำสั่งซื้อ → แจ้งเตือน → ตั้งค่า → ออกจากระบบ
 2. Part D ใน `Phase1.md`: error boundary, offline banner, pull-to-refresh, pagination, ผูกคูปองเข้า checkout จริง
+
+---
+
+## 🎨 Pixel Theme Reskin — ธีม "cozy pixel game" (เขียนเสร็จทั้งแอปแล้ว)
+
+แปลงดีไซน์จากไฟล์ที่ export มาจาก Claude Design (`16-bit pixel theme conversion/Pixel Appliance Shop.dc.html`)
+เป็นโค้ด React Native จริง **ครอบคลุมทั้งแอป** ไม่ใช่แค่ 5 หน้าตัวอย่าง เพราะ shared component/theme
+ถูกรีสกินแล้วทุกหน้าที่เหลือ (search, addresses, orders, coupons, settings, notifications, login/register)
+จึงได้หน้าตาใหม่อัตโนมัติตามไปด้วย
+
+**สถานะ:** `tsc --noEmit` ผ่าน 0 error · bundle สำเร็จ (3253 modules, ไม่มี error runtime) ·
+**ยังไม่ได้เปิดดูจริงบนอุปกรณ์/เบราว์เซอร์** — รอผู้ใช้ทดสอบ
+
+### ขอบเขตที่ตกลงกันไว้
+- ระบบเหรียญ/เลเวล/เควส (gamification) ที่เห็นในดีไซน์ต้นฉบับ = **แสดงหน้าตาอย่างเดียว ไม่มี backend จริง**
+  (ตัวเลขในหน้าโปรไฟล์เป็นค่า placeholder ตายตัว ยกเว้น "รายการโปรด" ที่ดึงจากข้อมูลจริง)
+- Reskin ครบทั้ง 5 หน้าที่มีดีไซน์ต้นแบบ: Home, รายละเอียดสินค้า, ตะกร้า, Checkout, โปรไฟล์
+
+### ไฟล์ใหม่
+| ไฟล์ | หน้าที่ |
+|------|---------|
+| `src/components/shop/pixel-panel.tsx` | แผงสถิตย์ (ไม่กด) มีเส้นขอบหนา + เงาทึบ (hard offset shadow) — ใช้กับการ์ดราคา, สรุปยอด, ที่อยู่ ฯลฯ |
+
+### Design tokens (`src/constants/theme.ts`) — เขียนใหม่ทั้งไฟล์
+- `Brand` พาเลตใหม่: พื้นหลังครีมอุ่น `#FDF3DC`, การ์ด `#FFFDF5`, เขียวมะนาว CTA เดิม `#D6F26A` (คงไว้),
+  เพิ่ม `skyBlue`/`saleBg`/`coin`/`mint`/`tan` สำหรับพื้นหลังแต่ละส่วน
+- `Radius` = 0 ทั้งหมด (ธีมพิกเซลใช้มุมฉาก ไม่มีมุมโค้ง) — cascade อัตโนมัติไปทุกที่ที่ใช้ `Radius.xxx` เดิม
+- `PixelFonts` ฟอนต์ใหม่ 3 ตระกูล (ผ่าน `@expo-google-fonts/*`, โหลดใน root `_layout.tsx` ด้วย `useFonts`):
+  - `pixel` (Press Start 2P) — ราคา/หัวข้อเน้น (รองรับแค่ละติน/ตัวเลข)
+  - `heading*` (Kanit 400-700) — หัวข้อ/ปุ่มภาษาไทย
+  - `body*` (Noto Sans Thai 400-600) — เนื้อหา/คำอธิบาย
+- `PixelBorder` (thin/base/thick = 2/3/4px), `PixelShadow` (sm/md/lg = 3/5/8px)
+- `CategoryPalette` สีพาสเทล 5 สีหมุนใช้กับ chip หมวดหมู่
+
+### `PressableScale` (ต่อยอดของเดิม ไม่ใช่ไฟล์ใหม่)
+เพิ่ม prop `pixelShadow?: number` — เมื่อใส่ค่า จะเรนเดอร์เงาทึบสี่เหลี่ยมชิดหลัง (แทน CSS `box-shadow` ที่ RN ไม่รองรับ)
+แล้วปุ่มจะ **"ยุบ" ทับเงาตอนกด** (translateX/Y เท่ากับระยะเงา) เลียนแบบปุ่มเกม 16-bit —
+ถ้าไม่ใส่ `pixelShadow` จะทำงานเหมือนเดิมทุกอย่าง (แค่ scale ตอนกด) ไม่กระทบโค้ดเก่าที่เรียกใช้แบบเดิม
+
+### Component ที่ reskin (คนละไฟล์ ไม่ได้สร้างใหม่)
+`icon-button.tsx` (วงกลม→สี่เหลี่ยมพิกเซล) · `badge.tsx` (สี่เหลี่ยมขอบหนา ฟอนต์ Kanit) ·
+`checkbox.tsx` · `quantity-stepper.tsx` · `heart-button.tsx` (วงกลม→สี่เหลี่ยม) ·
+`skeleton-image.tsx` (เพิ่มขอบพิกเซล) · `category-icon.tsx` (เพิ่ม prop `paletteIndex` หมุนสีพื้น) ·
+`section-header.tsx` · `top-bar.tsx` (พื้นหลังฟ้าพาสเทล + ขอบหนาด้านล่าง ทั้ง 2 variant) ·
+`product-card.tsx` (ขอบ+เงาพิกเซล) · `address-card.tsx`
+
+### หน้าจอที่ reskin ทั้งหมด (5 หน้าตามดีไซน์ต้นแบบ)
+`(tabs)/index.tsx` (Home — promo banner สีมิ้นท์, flash-sale panel สีชมพู "FLASH QUEST") ·
+`product/[id].tsx` (เพิ่ม energy bar 5 ช่องแบบมิเตอร์เกม) · `(tabs)/cart.tsx` ·
+`checkout/address.tsx` + `summary.tsx` + `success.tsx` · `(tabs)/profile.tsx` (เพิ่ม stat tile แถวบน)
++ `(tabs)/_layout.tsx` (bottom tab bar พื้น/ขอบ/ฟอนต์ใหม่)
+
+### 🐛 บั๊กที่เจอระหว่างทางและแก้แล้ว
+- `src/app/(tabs)/cart.tsx` — ปุ่ม "ชำระเงิน" มีฟังก์ชัน `onCheckout` แต่**ลืมผูก `onPress`** เข้ากับปุ่ม
+  (กดแล้วไม่มีอะไรเกิดขึ้นเลย) — แก้แล้ว
+
+### ⚠️ ข้อควรรู้ / จุดที่ประนีประนอมไว้ (ไม่ใช่บั๊ก)
+- **ไอคอนหมวดหมู่ยังใช้ `lucide-react-native`** (เส้น outline) ไม่ใช่ pixel art จริง — วางบน chip พื้นสีพาสเทล
+  ขอบหนาแทน เพื่อไม่ต้องวาด/หา asset ไอคอนพิกเซลใหม่ทั้งชุด (นอกขอบเขตที่ตกลงไว้)
+- **ลวดลาย diagonal stripe บนพื้นรูปสินค้าในดีไซน์ต้นฉบับ (CSS `repeating-linear-gradient`) ไม่ได้ทำ** —
+  ใช้พื้นสีเรียบแทน (`Brand.surfaceDeep`) เพราะ RN ทำลายเส้นทแยงแบบ CSS ไม่ได้ตรงๆ ต้องใช้ SVG pattern เพิ่ม
+- **มาสคอต "พลั๊กกี้" ในดีไซน์ต้นฉบับไม่ได้ทำ** — เป็นภาพประกอบเคลื่อนไหว (bob/blink animation) ต้องวาด
+  asset เอง ไม่ได้อยู่ใน scope นี้
+- **Press Start 2P ไม่รองรับตัวอักษรไทย** — ใช้เฉพาะกับตัวเลข/คำภาษาอังกฤษสั้นๆ (ราคา, ปุ่ม "CHECKOUT", ป้าย)
+  ส่วนข้อความไทยทั้งหมดใช้ Kanit/Noto Sans Thai แทน
+
+### ขั้นต่อไป
+**ทดสอบจริงบนเบราว์เซอร์/มือถือ** — เปิด `npx expo start --web -c` (ล้าง cache เพราะเปลี่ยน font/theme)
+ดูว่าฟอนต์โหลดขึ้นจริง สีตรงตามดีไซน์ ปุ่มกดแล้วมี pixel-shadow ยุบตัวสมจริง
 
 ### 🖥️ ข้อมูลเซิร์ฟเวอร์ (ทดสอบ port แล้ว — อย่าทดสอบซ้ำ)
 

@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 
-import { Brand } from '@/constants/theme';
+import { Brand, PixelBorder, PixelShadow } from '@/constants/theme';
 import { PressableScale } from '@/components/shop/pressable-scale';
 
 type Variant = 'surface' | 'floating' | 'favorite';
@@ -17,7 +17,7 @@ interface Props {
   accessibilityLabel?: string;
 }
 
-/** Circular icon button (36–40px) used across headers and cards. */
+/** Square pixel-bordered icon button (36–40px) used across headers and cards. */
 export function IconButton({
   children,
   onPress,
@@ -29,7 +29,7 @@ export function IconButton({
 }: Props) {
   const backgroundColor =
     variant === 'floating'
-      ? 'rgba(255,255,255,0.85)'
+      ? 'rgba(255,253,245,0.9)'
       : variant === 'favorite'
         ? Brand.favoriteBg
         : Brand.surface;
@@ -39,9 +39,16 @@ export function IconButton({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
+      pixelShadow={PixelShadow.sm}
       style={[
         styles.button,
-        { width: size, height: size, borderRadius: size / 2, backgroundColor },
+        {
+          width: size,
+          height: size,
+          backgroundColor,
+          borderWidth: PixelBorder.base,
+          borderColor: Brand.divider,
+        },
         style,
       ]}>
       {children}
@@ -57,11 +64,12 @@ const styles = StyleSheet.create({
   },
   dot: {
     position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    top: -4,
+    right: -4,
+    width: 10,
+    height: 10,
+    borderWidth: 2,
+    borderColor: Brand.divider,
     backgroundColor: Brand.notification,
   },
 });

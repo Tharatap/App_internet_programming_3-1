@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HeartButton } from '@/components/shop/heart-button';
 import { IconButton } from '@/components/shop/icon-button';
-import { Brand } from '@/constants/theme';
+import { Brand, PixelBorder, PixelFonts } from '@/constants/theme';
 
 interface HomeProps {
   variant: 'home';
@@ -146,9 +146,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingBottom: 10,
     gap: 12,
-    backgroundColor: Brand.background,
+    backgroundColor: Brand.skyBlue,
+    borderBottomWidth: PixelBorder.thick,
+    borderBottomColor: Brand.divider,
   },
   homeCenter: {
     flex: 1,
@@ -161,12 +163,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   addressLabel: {
-    fontSize: 12,
+    fontSize: 11,
+    fontFamily: PixelFonts.headingSemiBold,
     color: Brand.textSecondary,
   },
   address: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: PixelFonts.headingBold,
     color: Brand.text,
   },
   listLeft: {
@@ -176,8 +179,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 17,
+    fontFamily: PixelFonts.headingBold,
     color: Brand.text,
     flexShrink: 1,
   },

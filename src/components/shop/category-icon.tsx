@@ -12,7 +12,7 @@ import {
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/shop/pressable-scale';
-import { Brand } from '@/constants/theme';
+import { Brand, CategoryPalette, PixelBorder, PixelFonts, PixelShadow } from '@/constants/theme';
 import { CategoryIconName } from '@/types/product';
 
 const iconMap: Record<CategoryIconName, LucideIcon> = {
@@ -30,15 +30,23 @@ interface Props {
   name: CategoryIconName;
   label: string;
   onPress?: () => void;
+  /** Cycles through the pastel category palette — pass the item's list index. */
+  paletteIndex?: number;
 }
 
-/** Circular category button with a lucide icon and a caption below it. */
-export function CategoryIcon({ name, label, onPress }: Props) {
+/** Square pixel-bordered category tile with an icon and a caption below it. */
+export function CategoryIcon({ name, label, onPress, paletteIndex = 0 }: Props) {
   const Icon = iconMap[name];
+  const backgroundColor = CategoryPalette[paletteIndex % CategoryPalette.length];
+
   return (
-    <PressableScale style={styles.wrapper} onPress={onPress} accessibilityLabel={label}>
-      <View style={styles.circle}>
-        <Icon size={24} color={Brand.text} strokeWidth={1.75} />
+    <PressableScale
+      style={styles.wrapper}
+      onPress={onPress}
+      pixelShadow={PixelShadow.sm}
+      accessibilityLabel={label}>
+      <View style={[styles.tile, { backgroundColor }]}>
+        <Icon size={22} color={Brand.text} strokeWidth={2} />
       </View>
       <Text style={styles.label} numberOfLines={1}>
         {label}
@@ -50,19 +58,20 @@ export function CategoryIcon({ name, label, onPress }: Props) {
 const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
-    width: 64,
+    width: 60,
     gap: 6,
   },
-  circle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Brand.surface,
+  tile: {
+    width: 52,
+    height: 48,
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
     alignItems: 'center',
     justifyContent: 'center',
   },
   label: {
-    fontSize: 12,
+    fontSize: 11,
+    fontFamily: PixelFonts.headingSemiBold,
     color: Brand.textSecondary,
     textAlign: 'center',
   },

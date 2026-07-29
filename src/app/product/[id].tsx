@@ -25,10 +25,18 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Badge } from '@/components/shop/badge';
+import { PixelPanel } from '@/components/shop/pixel-panel';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { FloatingHeader } from '@/components/shop/top-bar';
-import { AppFrameWidth, Brand, Radius } from '@/constants/theme';
+import {
+  AppFrameWidth,
+  Brand,
+  PixelBorder,
+  PixelFonts,
+  PixelShadow,
+  Radius,
+} from '@/constants/theme';
 import { useCatalog } from '@/store/catalog-store';
 import { useShop } from '@/store/shop-store';
 import { formatBaht } from '@/utils/format';
@@ -63,6 +71,10 @@ export default function ProductDetailScreen() {
 
   // Gallery pages follow the number of real images (at least 1 grey placeholder).
   const galleryPages = Math.max(product.images.length, 1);
+  // 5-segment energy bar, matching the mockup's "ENERGY" meter.
+  const energySegments = product.energySavingPercent
+    ? Math.max(1, Math.min(5, Math.round(product.energySavingPercent / 20)))
+    : 0;
 
   const onGalleryScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     setPage(Math.round(e.nativeEvent.contentOffset.x / width));
@@ -111,7 +123,7 @@ export default function ProductDetailScreen() {
           </View>
 
           {/* Price card */}
-          <View style={styles.priceCard}>
+          <PixelPanel style={styles.priceCard}>
             <View style={styles.priceCardLeft}>
               <View style={styles.priceLine}>
                 <Text style={styles.price}>{formatBaht(product.price)}</Text>
@@ -131,7 +143,25 @@ export default function ProductDetailScreen() {
               onPress={() => setInfoVisible(true)}>
               <Info size={20} color={Brand.textMuted} strokeWidth={2} />
             </Pressable>
-          </View>
+          </PixelPanel>
+
+          {/* Energy meter */}
+          {energySegments > 0 ? (
+            <PixelPanel style={styles.energyCard}>
+              <View style={styles.energyHeaderRow}>
+                <Text style={styles.energyLabel}>ENERGY</Text>
+                <Text style={styles.energyValue}>ประหยัดไฟ เบอร์ 5</Text>
+              </View>
+              <View style={styles.energyBar}>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <View
+                    key={i}
+                    style={[styles.energySegment, i < energySegments && styles.energySegmentFilled]}
+                  />
+                ))}
+              </View>
+            </PixelPanel>
+          ) : null}
 
           {/* Description */}
           <Text style={styles.description} numberOfLines={expanded ? undefined : 2}>
@@ -192,6 +222,7 @@ export default function ProductDetailScreen() {
       <View style={[styles.sticky, { paddingBottom: insets.bottom + 12 }]}>
         <PressableScale
           style={[styles.cartButton, !product.inStock && styles.cartButtonDisabled]}
+          pixelShadow={product.inStock ? PixelShadow.sm : undefined}
           onPress={() => {
             if (product.inStock) {
               addToCart(product);
@@ -199,7 +230,7 @@ export default function ProductDetailScreen() {
             }
           }}>
           <Text style={styles.cartButtonText}>
-            {product.inStock ? 'เพิ่มลงตะกร้า' : 'สินค้าหมด'}
+            {product.inStock ? 'ADD TO CART' : 'สินค้าหมด'}
           </Text>
         </PressableScale>
         <View style={styles.deliveryRow}>
@@ -210,15 +241,20 @@ export default function ProductDetailScreen() {
 
       <Modal visible={infoVisible} transparent animationType="fade" onRequestClose={() => setInfoVisible(false)}>
         <Pressable style={styles.infoBackdrop} onPress={() => setInfoVisible(false)}>
-          <Pressable style={styles.infoCard} onPress={(e) => e.stopPropagation()}>
-            <Text style={styles.infoTitle}>เงื่อนไขการผ่อนชำระ</Text>
-            <Text style={styles.infoText}>
-              ผ่อนชำระผ่านบัตรเครดิตของธนาคารที่ร่วมรายการ 0% นานสูงสุด 10 เดือน
-              ยอดผ่อนต่อเดือนที่แสดงเป็นการประมาณการจากราคาสินค้าปัจจุบัน เงื่อนไขเป็นไปตามที่ธนาคารกำหนด
-            </Text>
-            <Pressable style={styles.infoCloseButton} onPress={() => setInfoVisible(false)}>
-              <Text style={styles.infoCloseText}>เข้าใจแล้ว</Text>
-            </Pressable>
+          <Pressable onPress={(e) => e.stopPropagation()} style={styles.infoCardWrapper}>
+            <PixelPanel style={styles.infoCard}>
+              <Text style={styles.infoTitle}>เงื่อนไขการผ่อนชำระ</Text>
+              <Text style={styles.infoText}>
+                ผ่อนชำระผ่านบัตรเครดิตของธนาคารที่ร่วมรายการ 0% นานสูงสุด 10 เดือน
+                ยอดผ่อนต่อเดือนที่แสดงเป็นการประมาณการจากราคาสินค้าปัจจุบัน เงื่อนไขเป็นไปตามที่ธนาคารกำหนด
+              </Text>
+              <PressableScale
+                style={styles.infoCloseButton}
+                pixelShadow={PixelShadow.sm}
+                onPress={() => setInfoVisible(false)}>
+                <Text style={styles.infoCloseText}>เข้าใจแล้ว</Text>
+              </PressableScale>
+            </PixelPanel>
           </Pressable>
         </Pressable>
       </Modal>
@@ -259,7 +295,7 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.background,
   },
   notFoundText: { fontSize: 16, color: Brand.text },
-  backLink: { fontSize: 14, color: Brand.successText, fontWeight: '600' },
+  backLink: { fontSize: 14, color: Brand.successText, fontFamily: PixelFonts.headingBold },
   galleryImage: {
     width,
     height: width,
@@ -274,13 +310,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    width: 8,
+    height: 8,
+    borderWidth: 2,
+    borderColor: Brand.divider,
+    backgroundColor: Brand.surface,
   },
   dotActive: {
-    width: 18,
     backgroundColor: Brand.text,
   },
   body: {
@@ -288,10 +324,10 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   name: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 18,
+    fontFamily: PixelFonts.headingBold,
     color: Brand.text,
-    lineHeight: 27,
+    lineHeight: 25,
   },
   badgeRow: {
     flexDirection: 'row',
@@ -305,19 +341,18 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.surface,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: Radius.sm,
+    borderWidth: PixelBorder.thin,
+    borderColor: Brand.divider,
   },
   ratingText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontFamily: PixelFonts.headingSemiBold,
     color: Brand.text,
   },
   priceCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Brand.surface,
-    borderRadius: Radius.card,
     padding: 16,
   },
   priceCardLeft: {
@@ -329,28 +364,65 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   price: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 18,
+    fontFamily: PixelFonts.pixel,
     color: Brand.text,
   },
   originalPrice: {
-    fontSize: 14,
+    fontSize: 13,
+    fontFamily: PixelFonts.bodyRegular,
     color: Brand.textMuted,
     textDecorationLine: 'line-through',
   },
   installment: {
-    fontSize: 12,
+    fontSize: 11,
+    fontFamily: PixelFonts.bodyRegular,
     color: Brand.textSecondary,
   },
+  energyCard: {
+    padding: 12,
+    gap: 8,
+  },
+  energyHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  energyLabel: {
+    fontSize: 9,
+    fontFamily: PixelFonts.pixel,
+    color: Brand.text,
+  },
+  energyValue: {
+    fontSize: 12,
+    fontFamily: PixelFonts.bodySemiBold,
+    color: Brand.successBg,
+  },
+  energyBar: {
+    flexDirection: 'row',
+    gap: 2,
+    height: 16,
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
+    backgroundColor: Brand.surfaceDeep,
+    padding: 2,
+  },
+  energySegment: {
+    flex: 1,
+  },
+  energySegmentFilled: {
+    backgroundColor: Brand.successBg,
+  },
   description: {
-    fontSize: 14,
-    lineHeight: 21,
+    fontSize: 13,
+    lineHeight: 20,
+    fontFamily: PixelFonts.bodyRegular,
     color: Brand.textSecondary,
   },
   readMore: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Brand.successText,
+    fontSize: 12,
+    fontFamily: PixelFonts.headingSemiBold,
+    color: Brand.successBg,
     marginTop: -6,
   },
   section: {
@@ -358,8 +430,8 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 15,
+    fontFamily: PixelFonts.headingBold,
     color: Brand.text,
   },
   specRow: {
@@ -373,12 +445,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   specLabelText: {
-    fontSize: 14,
+    fontSize: 13,
+    fontFamily: PixelFonts.bodyRegular,
     color: Brand.textSecondary,
   },
   specValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 13,
+    fontFamily: PixelFonts.bodySemiBold,
     color: Brand.text,
   },
   branchRow: {
@@ -387,7 +460,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   branchName: {
-    fontSize: 14,
+    fontSize: 13,
+    fontFamily: PixelFonts.bodyRegular,
     color: Brand.text,
   },
   branchStatus: {
@@ -396,8 +470,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   branchLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 12,
+    fontFamily: PixelFonts.bodySemiBold,
   },
   sticky: {
     position: 'absolute',
@@ -406,14 +480,15 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: Brand.background,
     borderTopColor: Brand.divider,
-    borderTopWidth: 1,
+    borderTopWidth: PixelBorder.thick,
     paddingHorizontal: 20,
     paddingTop: 12,
     gap: 6,
   },
   cartButton: {
     backgroundColor: Brand.accent,
-    borderRadius: Radius.pill,
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
     paddingVertical: 16,
     alignItems: 'center',
   },
@@ -421,8 +496,8 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.surfaceDeep,
   },
   cartButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 13,
+    fontFamily: PixelFonts.pixel,
     color: Brand.onAccent,
   },
   deliveryRow: {
@@ -432,32 +507,34 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   deliveryText: {
-    fontSize: 12,
+    fontSize: 11,
+    fontFamily: PixelFonts.bodyRegular,
     color: Brand.textSecondary,
   },
   infoBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(43,33,24,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
   },
-  infoCard: {
+  infoCardWrapper: {
     width: '100%',
     maxWidth: 360,
-    backgroundColor: Brand.background,
-    borderRadius: Radius.lg,
+  },
+  infoCard: {
     padding: 20,
     gap: 12,
   },
   infoTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 15,
+    fontFamily: PixelFonts.headingBold,
     color: Brand.text,
   },
   infoText: {
-    fontSize: 13,
-    lineHeight: 20,
+    fontSize: 12,
+    lineHeight: 19,
+    fontFamily: PixelFonts.bodyRegular,
     color: Brand.textSecondary,
   },
   infoCloseButton: {
@@ -465,12 +542,11 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: Radius.pill,
     backgroundColor: Brand.accent,
   },
   infoCloseText: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 12,
+    fontFamily: PixelFonts.headingBold,
     color: Brand.onAccent,
   },
 });

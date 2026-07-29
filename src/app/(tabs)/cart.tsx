@@ -4,12 +4,13 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Checkbox } from '@/components/shop/checkbox';
+import { PixelPanel } from '@/components/shop/pixel-panel';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { QuantityStepper } from '@/components/shop/quantity-stepper';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, Radius } from '@/constants/theme';
+import { Brand, PixelBorder, PixelFonts, PixelShadow, Radius } from '@/constants/theme';
 import { useShop } from '@/store/shop-store';
 import { formatBaht } from '@/utils/format';
 
@@ -43,16 +44,18 @@ export default function CartScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}>
         {/* Delivery address */}
-        <Pressable style={styles.address} onPress={() => router.push('/addresses')}>
-          <MapPin size={18} color={Brand.text} strokeWidth={2} />
-          <View style={styles.addressBody}>
-            <Text style={styles.addressLabel}>จัดส่งไปที่</Text>
-            <Text style={styles.addressText} numberOfLines={1}>
-              92 ถ.สุขุมวิท กรุงเทพฯ
-            </Text>
-          </View>
-          <ChevronRight size={18} color={Brand.textMuted} strokeWidth={2} />
-        </Pressable>
+        <PixelPanel shadowOffset={PixelShadow.sm} style={styles.address}>
+          <Pressable style={styles.addressInner} onPress={() => router.push('/addresses')}>
+            <MapPin size={18} color={Brand.text} strokeWidth={2} />
+            <View style={styles.addressBody}>
+              <Text style={styles.addressLabel}>จัดส่งไปที่</Text>
+              <Text style={styles.addressText} numberOfLines={1}>
+                92 ถ.สุขุมวิท กรุงเทพฯ
+              </Text>
+            </View>
+            <ChevronRight size={18} color={Brand.textMuted} strokeWidth={2} />
+          </Pressable>
+        </PixelPanel>
 
         {cart.length === 0 ? (
           <Text style={styles.empty}>ยังไม่มีสินค้าในตะกร้า</Text>
@@ -110,8 +113,11 @@ export default function CartScreen() {
             <Text style={styles.totalLabel}>ยอดรวม</Text>
             <Text style={styles.totalValue}>{formatBaht(selectedTotal)}</Text>
           </View>
-          <PressableScale style={styles.checkoutButton}>
-            <Text style={styles.checkoutText}>ชำระเงิน</Text>
+          <PressableScale
+            style={styles.checkoutButton}
+            pixelShadow={PixelShadow.sm}
+            onPress={onCheckout}>
+            <Text style={styles.checkoutText}>CHECKOUT ▸</Text>
           </PressableScale>
         </View>
       ) : null}
@@ -130,25 +136,25 @@ const styles = StyleSheet.create({
     paddingBottom: 160,
     gap: 16,
   },
-  address: {
+  address: {},
+  addressInner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: Brand.surface,
-    borderRadius: Radius.card,
-    padding: 16,
+    padding: 14,
   },
   addressBody: {
     flex: 1,
     gap: 2,
   },
   addressLabel: {
-    fontSize: 12,
+    fontSize: 11,
+    fontFamily: PixelFonts.headingSemiBold,
     color: Brand.textSecondary,
   },
   addressText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 13,
+    fontFamily: PixelFonts.bodySemiBold,
     color: Brand.text,
   },
   selectAll: {
@@ -157,8 +163,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   selectAllText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 13,
+    fontFamily: PixelFonts.bodyMedium,
     color: Brand.text,
   },
   items: {
@@ -169,7 +175,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     backgroundColor: Brand.surface,
-    borderRadius: Radius.card,
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
     padding: 12,
   },
   itemImage: {
@@ -181,10 +188,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   itemName: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 13,
+    fontFamily: PixelFonts.bodySemiBold,
     color: Brand.text,
-    lineHeight: 19,
+    lineHeight: 18,
   },
   itemFooter: {
     flexDirection: 'row',
@@ -192,13 +199,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   itemPrice: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 13,
+    fontFamily: PixelFonts.pixel,
     color: Brand.text,
   },
   empty: {
     textAlign: 'center',
     marginTop: 40,
+    fontFamily: PixelFonts.bodyRegular,
     color: Brand.textSecondary,
   },
   sticky: {
@@ -208,7 +216,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: Brand.background,
     borderTopColor: Brand.divider,
-    borderTopWidth: 1,
+    borderTopWidth: PixelBorder.thick,
     paddingHorizontal: 20,
     paddingTop: 12,
     gap: 10,
@@ -219,23 +227,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   totalLabel: {
-    fontSize: 14,
+    fontSize: 13,
+    fontFamily: PixelFonts.bodyRegular,
     color: Brand.textSecondary,
   },
   totalValue: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 17,
+    fontFamily: PixelFonts.pixel,
     color: Brand.text,
   },
   checkoutButton: {
     backgroundColor: Brand.accent,
-    borderRadius: Radius.pill,
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
     paddingVertical: 16,
     alignItems: 'center',
   },
   checkoutText: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 13,
+    fontFamily: PixelFonts.pixel,
     color: Brand.onAccent,
   },
 });

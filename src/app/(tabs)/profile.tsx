@@ -12,12 +12,14 @@ import {
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { PixelPanel } from '@/components/shop/pixel-panel';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, Radius } from '@/constants/theme';
+import { Brand, PixelBorder, PixelFonts, PixelShadow } from '@/constants/theme';
 import { useAuth } from '@/store/auth-store';
+import { useShop } from '@/store/shop-store';
 
 interface MenuItem {
   icon: LucideIcon;
@@ -29,6 +31,7 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { favorites } = useShop();
 
   const menu: MenuItem[] = [
     { icon: Package, label: 'คำสั่งซื้อของฉัน', href: '/orders' },
@@ -51,16 +54,37 @@ export default function ProfileScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
           {/* User card */}
-          <View style={styles.userCard}>
-            <SkeletonImage uri={user?.avatarUrl ?? undefined} style={styles.avatar} borderRadius={30} />
+          <PixelPanel style={styles.userCard}>
+            <SkeletonImage uri={user?.avatarUrl ?? undefined} style={styles.avatar} borderRadius={0} />
             <View style={styles.userBody}>
               <Text style={styles.userName}>{user?.name ?? ''}</Text>
               <Text style={styles.userSub}>{user?.email ?? ''}</Text>
             </View>
+          </PixelPanel>
+
+          {/* Stats row — "รายการโปรด" is real; the coin/coupon counts are decorative
+              placeholders (no loyalty-points backend exists), matching the pixel
+              mockup's game-like stat tiles without implying real functionality. */}
+          <View style={styles.statsRow}>
+            <View style={styles.statTile}>
+              <View style={[styles.statDot, { backgroundColor: Brand.coin }]} />
+              <Text style={styles.statValue}>1,240</Text>
+              <Text style={styles.statLabel}>เหรียญ</Text>
+            </View>
+            <View style={styles.statTile}>
+              <Heart size={18} color={Brand.favoriteIcon} strokeWidth={2} fill={Brand.favoriteIcon} />
+              <Text style={styles.statValue}>{favorites.size}</Text>
+              <Text style={styles.statLabel}>ของโปรด</Text>
+            </View>
+            <View style={styles.statTile}>
+              <View style={[styles.statDot, { backgroundColor: Brand.successBg }]} />
+              <Text style={styles.statValue}>02</Text>
+              <Text style={styles.statLabel}>คูปอง</Text>
+            </View>
           </View>
 
           {/* Menu */}
-          <View style={styles.menu}>
+          <PixelPanel style={styles.menu} shadowOffset={PixelShadow.md}>
             {menu.map((item, index) => {
               const Icon = item.icon;
               return (
@@ -74,7 +98,7 @@ export default function ProfileScreen() {
                 </Pressable>
               );
             })}
-          </View>
+          </PixelPanel>
 
           <PressableScale
             style={styles.logoutButton}
@@ -102,8 +126,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    backgroundColor: Brand.surface,
-    borderRadius: Radius.card,
     padding: 16,
   },
   avatar: {
@@ -114,17 +136,45 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   userName: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: 16,
+    fontFamily: PixelFonts.headingBold,
     color: Brand.text,
   },
   userSub: {
-    fontSize: 13,
+    fontSize: 12,
+    fontFamily: PixelFonts.bodyRegular,
+    color: Brand.textSecondary,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  statTile: {
+    flex: 1,
+    backgroundColor: Brand.surface,
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
+    paddingVertical: 12,
+    alignItems: 'center',
+    gap: 6,
+  },
+  statDot: {
+    width: 18,
+    height: 18,
+    borderWidth: 2,
+    borderColor: Brand.divider,
+  },
+  statValue: {
+    fontSize: 11,
+    fontFamily: PixelFonts.pixel,
+    color: Brand.text,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontFamily: PixelFonts.headingSemiBold,
     color: Brand.textSecondary,
   },
   menu: {
-    backgroundColor: Brand.surface,
-    borderRadius: Radius.card,
     paddingHorizontal: 16,
   },
   menuRow: {
@@ -134,12 +184,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   menuDivider: {
-    borderBottomWidth: 1,
+    borderBottomWidth: PixelBorder.thin,
     borderBottomColor: Brand.divider,
   },
   menuLabel: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
+    fontFamily: PixelFonts.bodySemiBold,
     color: Brand.text,
   },
   logoutButton: {
@@ -150,8 +201,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   logoutText: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 14,
+    fontFamily: PixelFonts.headingSemiBold,
     color: Brand.danger,
   },
 });
