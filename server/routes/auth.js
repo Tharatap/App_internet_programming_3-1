@@ -14,6 +14,7 @@ function toUserJson(row) {
     email: row.email,
     name: row.name,
     avatarUrl: row.avatar_url,
+    isAdmin: !!row.is_admin,
     settings: {
       language: row.language,
       theme: row.theme,

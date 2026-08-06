@@ -33,6 +33,7 @@ export interface Order {
   subtotal: number;
   shippingFee: number;
   discount: number;
+  couponCode: string | null;
   total: number;
   status: OrderStatus;
   shipRecipient: string;

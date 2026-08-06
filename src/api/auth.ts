@@ -5,6 +5,7 @@ export interface ApiUser {
   email: string;
   name: string;
   avatarUrl?: string | null;
+  isAdmin: boolean;
   settings: {
     language: 'th' | 'en';
     theme: 'light' | 'dark' | 'system';

@@ -21,7 +21,14 @@ const FREE_SHIPPING_THRESHOLD = 500;
 const SHIPPING_FEE = 50;
 
 export default function CheckoutSummaryScreen() {
-  const { addressId } = useLocalSearchParams<{ addressId: string }>();
+  const { addressId, couponCode, couponTitle, discountType, discountValue } =
+    useLocalSearchParams<{
+      addressId: string;
+      couponCode?: string;
+      couponTitle?: string;
+      discountType?: string;
+      discountValue?: string;
+    }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
@@ -33,7 +40,17 @@ export default function CheckoutSummaryScreen() {
 
   const selectedItems = cart.filter((item) => item.selected);
   const shippingFee = selectedTotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
-  const total = selectedTotal + shippingFee;
+  // Client-side preview only — the server always recomputes the authoritative
+  // discount from the coupons table when the order is created.
+  const previewDiscount = discountValue
+    ? Math.min(
+        selectedTotal,
+        discountType === 'percent'
+          ? Math.round((selectedTotal * Number(discountValue)) / 100)
+          : Number(discountValue)
+      )
+    : 0;
+  const total = selectedTotal + shippingFee - previewDiscount;
 
   useEffect(() => {
     if (!token || !addressId) return;
@@ -47,7 +64,7 @@ export default function CheckoutSummaryScreen() {
     setError(null);
     setSubmitting(true);
     try {
-      const order = await ordersApi.create(token, Number(addressId));
+      const order = await ordersApi.create(token, Number(addressId), couponCode ?? null);
       router.replace(`/checkout/success?orderId=${order.id}&orderNumber=${order.orderNumber}&total=${order.total}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'สั่งซื้อไม่สำเร็จ กรุณาลองใหม่');
@@ -96,6 +113,17 @@ export default function CheckoutSummaryScreen() {
             </View>
           </View>
 
+          <PressableScale
+            style={styles.couponRow}
+            onPress={() =>
+              router.push(`/coupons?addressId=${addressId}`)
+            }>
+            <Text style={styles.couponLabel}>คูปองส่วนลด</Text>
+            <Text style={styles.couponValue}>
+              {couponTitle || 'ยังไม่ได้เลือกคูปอง'}
+            </Text>
+          </PressableScale>
+
           <PixelPanel style={styles.summaryCard}>
             <Text style={styles.summaryHeading}>SUMMARY</Text>
             <View style={styles.summaryRow}>
@@ -108,6 +136,12 @@ export default function CheckoutSummaryScreen() {
                 {shippingFee === 0 ? 'ฟรี' : formatBaht(shippingFee)}
               </Text>
             </View>
+            {previewDiscount > 0 ? (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>ส่วนลดคูปอง</Text>
+                <Text style={styles.summaryValue}>-{formatBaht(previewDiscount)}</Text>
+              </View>
+            ) : null}
             <View style={styles.dashedLine} />
             <View style={styles.summaryRow}>
               <Text style={styles.summaryTotalLabel}>ยอดรวม</Text>
@@ -190,6 +224,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: PixelFonts.pixel,
     color: Brand.text,
+  },
+  couponRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Brand.surface,
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
+    padding: 14,
+  },
+  couponLabel: {
+    fontSize: 12,
+    fontFamily: PixelFonts.bodySemiBold,
+    color: Brand.text,
+  },
+  couponValue: {
+    fontSize: 12,
+    fontFamily: PixelFonts.bodyRegular,
+    color: Brand.textSecondary,
   },
   summaryCard: {
     padding: 14,

@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { Alert } from 'react-native';
 
 import { cartApi } from '@/api/cart';
 import { favoritesApi } from '@/api/favorites';
@@ -52,13 +53,52 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     }
 
     let cancelled = false;
+    // Guest cart/favorites captured at the moment login flips isAuthenticated —
+    // isAuthenticated/token changing always re-runs this effect on a fresh render,
+    // so this closure always sees the guest state as it was right before login.
+    const guestCart = cart;
+    const guestFavorites = favorites;
     (async () => {
       try {
-        const [serverCart, serverFavorites] = await Promise.all([
+        let [serverCart, serverFavorites] = await Promise.all([
           cartApi.get(token),
           favoritesApi.get(token),
         ]);
         if (cancelled) return;
+
+        const hasGuestState = guestCart.length > 0 || guestFavorites.size > 0;
+        if (hasGuestState) {
+          // Merge guest-only cart items into the server cart: sum quantities on
+          // overlap (capped at 99, matching QuantityStepper's max), add the rest.
+          const serverCartByProduct = new Map(serverCart.map((row) => [row.productId, row]));
+          await Promise.all(
+            guestCart.map((item) => {
+              const serverRow = serverCartByProduct.get(item.product.id);
+              if (serverRow) {
+                const mergedQty = Math.min(99, serverRow.quantity + item.quantity);
+                return mergedQty === serverRow.quantity
+                  ? Promise.resolve()
+                  : cartApi.updateItem(token, item.product.id, { quantity: mergedQty });
+              }
+              return cartApi.addItem(token, item.product.id, item.quantity);
+            })
+          );
+
+          // Merge guest favorites: only toggle ids not already favorited on the server.
+          const serverFavoriteSet = new Set(serverFavorites);
+          await Promise.all(
+            [...guestFavorites]
+              .filter((id) => !serverFavoriteSet.has(id))
+              .map((id) => favoritesApi.toggle(token, id))
+          );
+
+          if (cancelled) return;
+          [serverCart, serverFavorites] = await Promise.all([
+            cartApi.get(token),
+            favoritesApi.get(token),
+          ]);
+          if (cancelled) return;
+        }
 
         const hydrated: CartItem[] = serverCart
           .map((row) => {
@@ -81,7 +121,9 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
   const addToCart = useCallback(
     (product: Product, quantity = 1) => {
+      let snapshot: CartItem[] = [];
       setCart((prev) => {
+        snapshot = prev;
         const existing = prev.find((item) => item.product.id === product.id);
         if (existing) {
           return prev.map((item) =>
@@ -92,32 +134,50 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         }
         return [...prev, { product, quantity, selected: true }];
       });
-      if (token) cartApi.addItem(token, product.id, quantity).catch(() => {});
+      if (token) {
+        cartApi.addItem(token, product.id, quantity).catch(() => {
+          setCart(snapshot);
+          Alert.alert('เพิ่มสินค้าลงตะกร้าไม่สำเร็จ', 'กรุณาลองใหม่อีกครั้ง');
+        });
+      }
     },
     [token]
   );
 
   const removeFromCart = useCallback(
     (productId: string) => {
-      setCart((prev) => prev.filter((item) => item.product.id !== productId));
-      if (token) cartApi.removeItem(token, productId).catch(() => {});
+      let snapshot: CartItem[] = [];
+      setCart((prev) => {
+        snapshot = prev;
+        return prev.filter((item) => item.product.id !== productId);
+      });
+      if (token) {
+        cartApi.removeItem(token, productId).catch(() => {
+          setCart(snapshot);
+          Alert.alert('ลบสินค้าไม่สำเร็จ', 'กรุณาลองใหม่อีกครั้ง');
+        });
+      }
     },
     [token]
   );
 
   const setQuantity = useCallback(
     (productId: string, quantity: number) => {
-      setCart((prev) =>
-        quantity <= 0
+      let snapshot: CartItem[] = [];
+      setCart((prev) => {
+        snapshot = prev;
+        return quantity <= 0
           ? prev.filter((item) => item.product.id !== productId)
-          : prev.map((item) => (item.product.id === productId ? { ...item, quantity } : item))
-      );
+          : prev.map((item) => (item.product.id === productId ? { ...item, quantity } : item));
+      });
       if (token) {
-        if (quantity <= 0) {
-          cartApi.removeItem(token, productId).catch(() => {});
-        } else {
-          cartApi.updateItem(token, productId, { quantity }).catch(() => {});
-        }
+        const request = quantity <= 0
+          ? cartApi.removeItem(token, productId)
+          : cartApi.updateItem(token, productId, { quantity });
+        request.catch(() => {
+          setCart(snapshot);
+          Alert.alert('เปลี่ยนจำนวนไม่สำเร็จ', 'กรุณาลองใหม่อีกครั้ง');
+        });
       }
     },
     [token]
@@ -125,30 +185,48 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
   const toggleCartSelected = useCallback(
     (productId: string) => {
+      let snapshot: CartItem[] = [];
       let nextSelected = true;
-      setCart((prev) =>
-        prev.map((item) => {
+      setCart((prev) => {
+        snapshot = prev;
+        return prev.map((item) => {
           if (item.product.id !== productId) return item;
           nextSelected = !item.selected;
           return { ...item, selected: nextSelected };
-        })
-      );
-      if (token) cartApi.updateItem(token, productId, { selected: nextSelected }).catch(() => {});
+        });
+      });
+      if (token) {
+        cartApi.updateItem(token, productId, { selected: nextSelected }).catch(() => {
+          setCart(snapshot);
+          Alert.alert('เลือกสินค้าไม่สำเร็จ', 'กรุณาลองใหม่อีกครั้ง');
+        });
+      }
     },
     [token]
   );
 
   const setAllSelected = useCallback(
     (selected: boolean) => {
-      setCart((prev) => prev.map((item) => ({ ...item, selected })));
-      if (token) cartApi.setAllSelected(token, selected).catch(() => {});
+      let snapshot: CartItem[] = [];
+      setCart((prev) => {
+        snapshot = prev;
+        return prev.map((item) => ({ ...item, selected }));
+      });
+      if (token) {
+        cartApi.setAllSelected(token, selected).catch(() => {
+          setCart(snapshot);
+          Alert.alert('เลือกสินค้าทั้งหมดไม่สำเร็จ', 'กรุณาลองใหม่อีกครั้ง');
+        });
+      }
     },
     [token]
   );
 
   const toggleFavorite = useCallback(
     (productId: string) => {
+      let snapshot: Set<string> = new Set();
       setFavorites((prev) => {
+        snapshot = prev;
         const next = new Set(prev);
         if (next.has(productId)) {
           next.delete(productId);
@@ -157,7 +235,12 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         }
         return next;
       });
-      if (token) favoritesApi.toggle(token, productId).catch(() => {});
+      if (token) {
+        favoritesApi.toggle(token, productId).catch(() => {
+          setFavorites(snapshot);
+          Alert.alert('อัปเดตรายการโปรดไม่สำเร็จ', 'กรุณาลองใหม่อีกครั้ง');
+        });
+      }
     },
     [token]
   );

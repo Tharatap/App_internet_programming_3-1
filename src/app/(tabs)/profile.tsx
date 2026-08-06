@@ -6,6 +6,7 @@ import {
   MapPin,
   Package,
   Settings,
+  ShieldCheck,
   Ticket,
   type LucideIcon,
 } from 'lucide-react-native';
@@ -24,7 +25,7 @@ import { useShop } from '@/store/shop-store';
 interface MenuItem {
   icon: LucideIcon;
   label: string;
-  href: '/orders' | '/addresses' | '/coupons' | '/(tabs)/favorites' | '/settings';
+  href: '/orders' | '/addresses' | '/coupons' | '/(tabs)/favorites' | '/settings' | '/admin/products';
 }
 
 export default function ProfileScreen() {
@@ -39,6 +40,9 @@ export default function ProfileScreen() {
     { icon: Ticket, label: 'คูปองส่วนลด', href: '/coupons' },
     { icon: Heart, label: 'รายการโปรด', href: '/(tabs)/favorites' },
     { icon: Settings, label: 'ตั้งค่า', href: '/settings' },
+    ...(user?.isAdmin
+      ? [{ icon: ShieldCheck, label: 'จัดการสินค้า', href: '/admin/products' } as MenuItem]
+      : []),
   ];
 
   const onLogout = async () => {

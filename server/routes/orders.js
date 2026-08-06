@@ -23,6 +23,7 @@ function toOrderJson(order, items) {
     subtotal: Number(order.subtotal),
     shippingFee: Number(order.shipping_fee),
     discount: Number(order.discount),
+    couponCode: order.coupon_code,
     total: Number(order.total),
     status: order.status,
     shipRecipient: order.ship_recipient,
@@ -44,7 +45,7 @@ function toOrderJson(order, items) {
 router.post(
   '/',
   asyncHandler(async (req, res) => {
-    const { addressId } = req.body;
+    const { addressId, couponCode } = req.body;
     if (!addressId) return res.status(400).json({ message: 'กรุณาเลือกที่อยู่จัดส่ง' });
 
     const conn = await pool.getConnection();
@@ -94,7 +95,35 @@ router.post(
 
       const subtotal = cartRows.reduce((sum, r) => sum + Number(r.price) * r.quantity, 0);
       const shippingFee = subtotal >= 500 ? 0 : 50; // ตัวอย่างกฎค่าส่ง ปรับได้ตามโปรฯ จริง
-      const discount = 0;
+
+      // คำนวณส่วนลดใหม่ฝั่ง server เสมอ — ไม่เชื่อยอดส่วนลดจาก client เด็ดขาด
+      let discount = 0;
+      let appliedCouponCode = null;
+      if (couponCode) {
+        const [couponRows] = await conn.execute(
+          `SELECT * FROM coupons WHERE code = ? AND is_active = 1
+           AND (expires_at IS NULL OR expires_at >= CURDATE())`,
+          [couponCode]
+        );
+        if (couponRows.length === 0) {
+          await conn.rollback();
+          return res.status(400).json({ message: 'คูปองไม่ถูกต้องหรือหมดอายุแล้ว' });
+        }
+        const coupon = couponRows[0];
+        if (subtotal < Number(coupon.min_spend)) {
+          await conn.rollback();
+          return res
+            .status(400)
+            .json({ message: `ต้องซื้อขั้นต่ำ ${coupon.min_spend} บาทเพื่อใช้คูปองนี้` });
+        }
+        discount =
+          coupon.discount_type === 'percent'
+            ? Math.round((subtotal * Number(coupon.discount_value)) / 100)
+            : Number(coupon.discount_value);
+        discount = Math.min(discount, subtotal); // ห้ามลดเกินยอดสินค้า
+        appliedCouponCode = coupon.code;
+      }
+
       const total = subtotal + shippingFee - discount;
 
       const orderNumber = generateOrderNumber();
@@ -102,15 +131,16 @@ router.post(
 
       const [orderResult] = await conn.execute(
         `INSERT INTO orders
-           (user_id, order_number, subtotal, shipping_fee, discount, total,
+           (user_id, order_number, subtotal, shipping_fee, discount, coupon_code, total,
             status, ship_recipient, ship_phone, ship_address)
-         VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)`,
         [
           req.userId,
           orderNumber,
           subtotal,
           shippingFee,
           discount,
+          appliedCouponCode,
           total,
           address.recipient,
           address.phone,

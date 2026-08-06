@@ -1,6 +1,8 @@
 const express = require('express');
 
 const pool = require('../db');
+const auth = require('../middleware/auth');
+const adminOnly = require('../middleware/admin');
 const { asyncHandler } = require('../middleware/error');
 
 const router = express.Router();
@@ -159,6 +161,192 @@ router.get(
     }
     const [product] = await attachRelations(rows);
     res.json(product);
+  })
+);
+
+function validateProductInput(body) {
+  if (!body.name || !body.categoryId || !body.description) {
+    return 'กรุณากรอกชื่อ หมวดหมู่ และคำอธิบายสินค้าให้ครบ';
+  }
+  if (!(Number(body.price) > 0)) {
+    return 'กรุณากรอกราคาสินค้าให้ถูกต้อง';
+  }
+  return null;
+}
+
+async function writeImagesAndBranchStock(conn, productId, images, branchStock) {
+  await conn.execute('DELETE FROM product_images WHERE product_id = ?', [productId]);
+  for (const [index, url] of (images ?? []).entries()) {
+    await conn.execute(
+      'INSERT INTO product_images (product_id, url, sort_order) VALUES (?, ?, ?)',
+      [productId, url, index]
+    );
+  }
+
+  await conn.execute('DELETE FROM product_branch_stock WHERE product_id = ?', [productId]);
+  for (const branch of branchStock ?? []) {
+    await conn.execute(
+      `INSERT INTO product_branch_stock (product_id, branch_code, branch_name, in_stock)
+       VALUES (?, ?, ?, ?)`,
+      [productId, branch.id, branch.name, branch.inStock ? 1 : 0]
+    );
+  }
+}
+
+// POST /api/products — สร้างสินค้าใหม่ (เฉพาะแอดมิน)
+router.post(
+  '/',
+  auth,
+  adminOnly,
+  asyncHandler(async (req, res) => {
+    const body = req.body;
+    const validationError = validateProductInput(body);
+    if (validationError) return res.status(400).json({ message: validationError });
+
+    const id = `p${Date.now()}`;
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      await conn.execute(
+        `INSERT INTO products
+           (id, name, category_id, brand, price, original_price, description,
+            energy_saving_percent, in_stock, is_flash_sale, installment_per_month,
+            spec_power, spec_suitable_room, spec_warranty)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          body.name,
+          body.categoryId,
+          body.brand ?? '',
+          body.price,
+          body.originalPrice ?? null,
+          body.description,
+          body.energySavingPercent ?? null,
+          body.inStock ? 1 : 0,
+          body.isFlashSale ? 1 : 0,
+          body.installmentPerMonth ?? null,
+          body.specs?.power ?? '',
+          body.specs?.suitableRoom ?? '',
+          body.specs?.warranty ?? '',
+        ]
+      );
+
+      await writeImagesAndBranchStock(conn, id, body.images, body.branchStock);
+
+      await conn.commit();
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
+
+    const [rows] = await pool.execute('SELECT * FROM products WHERE id = ?', [id]);
+    const [product] = await attachRelations(rows);
+    res.status(201).json(product);
+  })
+);
+
+// PUT /api/products/:id — แก้ไขสินค้า (เฉพาะแอดมิน)
+router.put(
+  '/:id',
+  auth,
+  adminOnly,
+  asyncHandler(async (req, res) => {
+    const body = req.body;
+    const validationError = validateProductInput(body);
+    if (validationError) return res.status(400).json({ message: validationError });
+
+    const id = req.params.id;
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      const [existing] = await conn.execute('SELECT id FROM products WHERE id = ? FOR UPDATE', [
+        id,
+      ]);
+      if (existing.length === 0) {
+        await conn.rollback();
+        return res.status(404).json({ message: 'ไม่พบสินค้า' });
+      }
+
+      await conn.execute(
+        `UPDATE products SET
+           name = ?, category_id = ?, brand = ?, price = ?, original_price = ?,
+           description = ?, energy_saving_percent = ?, in_stock = ?, is_flash_sale = ?,
+           installment_per_month = ?, spec_power = ?, spec_suitable_room = ?, spec_warranty = ?
+         WHERE id = ?`,
+        [
+          body.name,
+          body.categoryId,
+          body.brand ?? '',
+          body.price,
+          body.originalPrice ?? null,
+          body.description,
+          body.energySavingPercent ?? null,
+          body.inStock ? 1 : 0,
+          body.isFlashSale ? 1 : 0,
+          body.installmentPerMonth ?? null,
+          body.specs?.power ?? '',
+          body.specs?.suitableRoom ?? '',
+          body.specs?.warranty ?? '',
+          id,
+        ]
+      );
+
+      await writeImagesAndBranchStock(conn, id, body.images, body.branchStock);
+
+      await conn.commit();
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
+
+    const [rows] = await pool.execute('SELECT * FROM products WHERE id = ?', [id]);
+    const [product] = await attachRelations(rows);
+    res.json(product);
+  })
+);
+
+// DELETE /api/products/:id — ลบสินค้า (เฉพาะแอดมิน)
+router.delete(
+  '/:id',
+  auth,
+  adminOnly,
+  asyncHandler(async (req, res) => {
+    const id = req.params.id;
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      const [existing] = await conn.execute('SELECT id FROM products WHERE id = ? FOR UPDATE', [
+        id,
+      ]);
+      if (existing.length === 0) {
+        await conn.rollback();
+        return res.status(404).json({ message: 'ไม่พบสินค้า' });
+      }
+
+      // ไม่มี FK ในระบบนี้ — ต้องลบแถวที่อ้างอิงสินค้านี้เองด้วยโค้ด
+      // (ไม่แตะ order_items เพราะเป็น snapshot ประวัติการสั่งซื้อ ต้องคงอยู่แม้สินค้าต้นทางถูกลบ)
+      await conn.execute('DELETE FROM cart_items WHERE product_id = ?', [id]);
+      await conn.execute('DELETE FROM favorites WHERE product_id = ?', [id]);
+      await conn.execute('DELETE FROM product_images WHERE product_id = ?', [id]);
+      await conn.execute('DELETE FROM product_branch_stock WHERE product_id = ?', [id]);
+      await conn.execute('DELETE FROM products WHERE id = ?', [id]);
+
+      await conn.commit();
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
+
+    res.status(204).send();
   })
 );
 

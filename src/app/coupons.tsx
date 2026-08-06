@@ -1,12 +1,14 @@
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ticket } from 'lucide-react-native';
 
 import { couponsApi } from '@/api/coupons';
+import { PressableScale } from '@/components/shop/pressable-scale';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, Radius } from '@/constants/theme';
+import { Brand, PixelBorder, Radius } from '@/constants/theme';
 import { useAuth } from '@/store/auth-store';
 import { Coupon } from '@/types/shop';
 import { formatBaht } from '@/utils/format';
@@ -19,7 +21,10 @@ function discountLabel(coupon: Coupon): string {
 
 export default function CouponsScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { token } = useAuth();
+  const { addressId } = useLocalSearchParams<{ addressId?: string }>();
+  const pickerMode = !!addressId;
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,6 +36,19 @@ export default function CouponsScreen() {
       .finally(() => setLoading(false));
   }, [token]);
 
+  const onSelect = (coupon: Coupon | null) => {
+    if (!pickerMode) return;
+    if (!coupon) {
+      router.replace(`/checkout/summary?addressId=${addressId}`);
+      return;
+    }
+    const couponCode = encodeURIComponent(coupon.code);
+    const couponTitle = encodeURIComponent(coupon.title);
+    router.replace(
+      `/checkout/summary?addressId=${addressId}&couponCode=${couponCode}&couponTitle=${couponTitle}&discountType=${coupon.discountType}&discountValue=${coupon.discountValue}`
+    );
+  };
+
   return (
     <View style={styles.screen}>
       <TopBar variant="list" title="คูปองส่วนลด" showBack />
@@ -39,7 +57,7 @@ export default function CouponsScreen() {
           data={coupons}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
-            <View style={styles.card}>
+            <PressableScale style={styles.card} onPress={() => onSelect(item)}>
               <View style={styles.codeBadge}>
                 <Text style={styles.codeText}>{item.code}</Text>
               </View>
@@ -58,8 +76,15 @@ export default function CouponsScreen() {
                   </Text>
                 ) : null}
               </View>
-            </View>
+            </PressableScale>
           )}
+          ListHeaderComponent={
+            pickerMode ? (
+              <PressableScale style={styles.noCouponRow} onPress={() => onSelect(null)}>
+                <Text style={styles.noCouponText}>ไม่ใช้คูปอง</Text>
+              </PressableScale>
+            ) : null
+          }
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
           showsVerticalScrollIndicator={false}
@@ -91,6 +116,21 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.surface,
     borderRadius: Radius.card,
     overflow: 'hidden',
+  },
+  noCouponRow: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Brand.surface,
+    borderRadius: Radius.card,
+    borderWidth: PixelBorder.thin,
+    borderColor: Brand.divider,
+    paddingVertical: 14,
+    marginBottom: 12,
+  },
+  noCouponText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Brand.textSecondary,
   },
   codeBadge: {
     width: 72,

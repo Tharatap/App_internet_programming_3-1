@@ -63,6 +63,27 @@ export interface Product {
   branchStock: BranchStock[];
 }
 
+/** Fields an admin can set when creating/editing a product (server manages id/rating/reviewCount). */
+export interface ProductInput {
+  name: string;
+  categoryId: string;
+  brand: string;
+  price: number;
+  originalPrice?: number;
+  images: string[];
+  description: string;
+  energySavingPercent?: number;
+  inStock: boolean;
+  isFlashSale: boolean;
+  installmentPerMonth?: number;
+  specs: {
+    power: string;
+    suitableRoom: string;
+    warranty: string;
+  };
+  branchStock: BranchStock[];
+}
+
 /** A product plus a quantity, used by the cart. */
 export interface CartItem {
   product: Product;

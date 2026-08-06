@@ -17,6 +17,10 @@ SET NAMES utf8mb4;
 
 -- ------------------------------------------------------------
 -- ผู้ใช้งาน
+-- ⚠️ ถ้า database มีตาราง users อยู่แล้ว (สร้างก่อนเพิ่มคอลัมน์ is_admin)
+--    ต้องรันเองใน phpMyAdmin:
+--    ALTER TABLE users ADD COLUMN is_admin TINYINT(1) NOT NULL DEFAULT 0 AFTER notify_promo;
+--    UPDATE users SET is_admin = 1 WHERE email = '<อีเมลแอดมินคนแรก>';
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
   id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -27,6 +31,7 @@ CREATE TABLE IF NOT EXISTS users (
   language       ENUM('th','en')                 NOT NULL DEFAULT 'th',
   theme          ENUM('light','dark','system')   NOT NULL DEFAULT 'light',
   notify_promo   TINYINT(1) NOT NULL DEFAULT 1,
+  is_admin       TINYINT(1) NOT NULL DEFAULT 0,  -- สิทธิ์จัดการสินค้า (เพิ่ม/แก้ไข)
   created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_users_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -138,6 +143,8 @@ CREATE TABLE IF NOT EXISTS favorites (
 
 -- ------------------------------------------------------------
 -- คำสั่งซื้อ  (เก็บ snapshot ที่อยู่ ณ ตอนสั่ง)
+-- ⚠️ ถ้า database มีตาราง orders อยู่แล้ว (สร้างก่อนเพิ่มคอลัมน์ coupon_code)
+--    ต้องรันเองใน phpMyAdmin: ALTER TABLE orders ADD COLUMN coupon_code VARCHAR(40) NULL AFTER discount;
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS orders (
   id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -146,6 +153,7 @@ CREATE TABLE IF NOT EXISTS orders (
   subtotal       DECIMAL(10,2) NOT NULL DEFAULT 0,
   shipping_fee   DECIMAL(10,2) NOT NULL DEFAULT 0,
   discount       DECIMAL(10,2) NOT NULL DEFAULT 0,
+  coupon_code    VARCHAR(40)  NULL,        -- snapshot โค้ดคูปองที่ใช้ ณ ตอนสั่ง (ไม่ผูก FK เพราะ coupons ลบ/ปิดได้ทีหลัง)
   total          DECIMAL(10,2) NOT NULL DEFAULT 0,
   status         ENUM('pending','confirmed','shipping','delivered','cancelled')
                  NOT NULL DEFAULT 'pending',

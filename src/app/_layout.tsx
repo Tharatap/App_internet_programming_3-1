@@ -67,6 +67,8 @@ export default function RootLayout() {
                 <Stack.Screen name="orders/index" />
                 <Stack.Screen name="orders/[id]" />
                 <Stack.Screen name="checkout" />
+                <Stack.Screen name="admin/products" />
+                <Stack.Screen name="admin/product-form" />
               </Stack>
               <AnimatedSplashOverlay />
             </View>

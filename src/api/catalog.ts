@@ -1,5 +1,5 @@
 import { apiRequest } from '@/api/client';
-import { Category, Product } from '@/types/product';
+import { Category, Product, ProductInput } from '@/types/product';
 
 interface ProductListResponse {
   items: Product[];
@@ -16,4 +16,16 @@ export const catalogApi = {
   },
 
   listCategories: () => apiRequest<Category[]>('/categories'),
+
+  /** แอดมินเท่านั้น — เพิ่มสินค้าใหม่ */
+  createProduct: (token: string, input: ProductInput) =>
+    apiRequest<Product>('/products', { method: 'POST', token, body: input }),
+
+  /** แอดมินเท่านั้น — แก้ไขสินค้าเดิม */
+  updateProduct: (token: string, id: string, input: ProductInput) =>
+    apiRequest<Product>(`/products/${id}`, { method: 'PUT', token, body: input }),
+
+  /** แอดมินเท่านั้น — ลบสินค้า */
+  deleteProduct: (token: string, id: string) =>
+    apiRequest<void>(`/products/${id}`, { method: 'DELETE', token }),
 };
