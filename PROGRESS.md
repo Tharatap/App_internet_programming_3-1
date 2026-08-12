@@ -3,11 +3,12 @@
 > **สำหรับ AI:** อ่านไฟล์นี้ก่อนเริ่มงานเสมอ เพื่อไม่ต้องสำรวจโค้ดซ้ำ (ประหยัด token)
 > **ทำงานเสร็จแต่ละก้อน → กลับมาอัปเดตไฟล์นี้ทันที** (ดูวิธีอัปเดตท้ายไฟล์)
 
-**อัปเดตล่าสุด:** 2026-08-06 · **สถานะรวม:** Phase 1 เสร็จ 100% · Phase 2: PART A (backend) ✅ deploy สำเร็จ+ทดสอบผ่านหมด ·
+**อัปเดตล่าสุด:** 2026-08-12 · **สถานะรวม:** Phase 1 เสร็จ 100% · Phase 2: PART A (backend) ✅ deploy สำเร็จ+ทดสอบผ่านหมด ·
 PART B (auth+เชื่อม API) ✅ เขียนเสร็จ+**ทดสอบผ่านจริงจากเบราว์เซอร์แล้ว** (login ใช้งานได้) ·
 PART C (ทำให้ปุ่มที่เหลือใช้งานได้จริง) ✅ เขียนเสร็จ ยังไม่ทดสอบครบทุก flow ·
 🎨 **Pixel Theme Reskin** ✅ เขียนเสร็จทั้งแอป ผ่าน typecheck 0 error + bundle สำเร็จ + **เปิดดูจริงบนเบราว์เซอร์แล้ว ผ่าน** (2026-08-06) ·
 🛠️ **แอดมิน: เพิ่ม/แก้ไข/ลบสินค้า** ✅ เขียนเสร็จ `tsc --noEmit` ผ่าน 0 error ยังไม่ได้ทดสอบจริง (ต้องรัน SQL + deploy backend ก่อน)
+· PART D ก้อนที่ 1 (Error Boundary + Offline Handling) ✅ เขียนเสร็จและ `tsc --noEmit` ผ่าน 0 error
 
 ---
 
@@ -68,9 +69,15 @@ PART C (ทำให้ปุ่มที่เหลือใช้งานไ
 | `src/components/shop/top-bar.tsx` | `FloatingHeader` | ปุ่ม share ไม่มี handler |
 | `src/app/products.tsx` | 12–35 | filter chips ทำได้แค่ sort · **ไม่มี field `brand` ใน data** · ไม่รับ query ค้นหา |
 
+### ✅ PART D ก้อนที่ 1 — Error Boundary + Offline Handling
+- `src/components/error-boundary.tsx` — class error boundary พร้อม fallback ภาษาไทยและปุ่มลองใหม่
+- `src/hooks/use-network-status.ts` — subscribe สถานะเครือข่ายผ่าน NetInfo
+- `src/components/shop/offline-banner.tsx` — แถบแจ้งออฟไลน์ที่แสดงทุกหน้า
+- `src/app/_layout.tsx` — ครอบทั้งแอปด้วย ErrorBoundary และวาง OfflineBanner เหนือ Stack
+
 ### ระบบที่ยังไม่มีเลย
 Backend (Express + MySQL) · ระบบสมาชิก (JWT) · ที่อยู่จัดส่ง · คำสั่งซื้อ/ประวัติ ·
-แจ้งเตือน · ตั้งค่า · คูปอง · error boundary · offline handling ·
+แจ้งเตือน · ตั้งค่า · คูปอง ·
 **cart/favorites หายเมื่อ refresh** (อยู่ใน memory + ยังมี seed hardcode `p1`,`p3`,`p2`,`p5` ใน `shop-store.tsx`)
 
 ### ✅ SQL พร้อมแล้ว (สร้างไว้แล้ว — เหลือแค่เอาไปรัน)
