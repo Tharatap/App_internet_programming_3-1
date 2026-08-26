@@ -7,10 +7,10 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { Alert } from 'react-native';
 
 import { cartApi } from '@/api/cart';
 import { favoritesApi } from '@/api/favorites';
+import { useToast } from '@/components/shop/toast';
 import { useAuth } from '@/store/auth-store';
 import { useCatalog } from '@/store/catalog-store';
 import { CartItem, Product } from '@/types/product';
@@ -39,6 +39,7 @@ const ShopContext = createContext<ShopContextValue | null>(null);
 export function ShopProvider({ children }: { children: ReactNode }) {
   const { token, isAuthenticated } = useAuth();
   const { getProductById } = useCatalog();
+  const { showToast } = useToast();
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -137,11 +138,11 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       if (token) {
         cartApi.addItem(token, product.id, quantity).catch(() => {
           setCart(snapshot);
-          Alert.alert('เพิ่มสินค้าลงตะกร้าไม่สำเร็จ', 'กรุณาลองใหม่อีกครั้ง');
+          showToast('เพิ่มสินค้าลงตะกร้าไม่สำเร็จ');
         });
       }
     },
-    [token]
+    [token, showToast]
   );
 
   const removeFromCart = useCallback(
@@ -154,11 +155,11 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       if (token) {
         cartApi.removeItem(token, productId).catch(() => {
           setCart(snapshot);
-          Alert.alert('ลบสินค้าไม่สำเร็จ', 'กรุณาลองใหม่อีกครั้ง');
+          showToast('ลบสินค้าไม่สำเร็จ');
         });
       }
     },
-    [token]
+    [token, showToast]
   );
 
   const setQuantity = useCallback(
@@ -176,11 +177,11 @@ export function ShopProvider({ children }: { children: ReactNode }) {
           : cartApi.updateItem(token, productId, { quantity });
         request.catch(() => {
           setCart(snapshot);
-          Alert.alert('เปลี่ยนจำนวนไม่สำเร็จ', 'กรุณาลองใหม่อีกครั้ง');
+          showToast('เปลี่ยนจำนวนไม่สำเร็จ');
         });
       }
     },
-    [token]
+    [token, showToast]
   );
 
   const toggleCartSelected = useCallback(
@@ -198,11 +199,11 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       if (token) {
         cartApi.updateItem(token, productId, { selected: nextSelected }).catch(() => {
           setCart(snapshot);
-          Alert.alert('เลือกสินค้าไม่สำเร็จ', 'กรุณาลองใหม่อีกครั้ง');
+          showToast('เลือกสินค้าไม่สำเร็จ');
         });
       }
     },
-    [token]
+    [token, showToast]
   );
 
   const setAllSelected = useCallback(
@@ -215,11 +216,11 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       if (token) {
         cartApi.setAllSelected(token, selected).catch(() => {
           setCart(snapshot);
-          Alert.alert('เลือกสินค้าทั้งหมดไม่สำเร็จ', 'กรุณาลองใหม่อีกครั้ง');
+          showToast('เลือกสินค้าทั้งหมดไม่สำเร็จ');
         });
       }
     },
-    [token]
+    [token, showToast]
   );
 
   const toggleFavorite = useCallback(
@@ -238,11 +239,11 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       if (token) {
         favoritesApi.toggle(token, productId).catch(() => {
           setFavorites(snapshot);
-          Alert.alert('อัปเดตรายการโปรดไม่สำเร็จ', 'กรุณาลองใหม่อีกครั้ง');
+          showToast('อัปเดตรายการโปรดไม่สำเร็จ');
         });
       }
     },
-    [token]
+    [token, showToast]
   );
 
   const value = useMemo<ShopContextValue>(() => {

@@ -1,13 +1,15 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { usersApi } from '@/api/users';
 import { Checkbox } from '@/components/shop/checkbox';
+import { ConfirmModal } from '@/components/shop/confirm-modal';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { TopBar } from '@/components/shop/top-bar';
+import { useToast } from '@/components/shop/toast';
 import { Brand, Radius } from '@/constants/theme';
 import { useAuth } from '@/store/auth-store';
 import { searchHistory } from '@/utils/search-history';
@@ -27,10 +29,12 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, token, logout } = useAuth();
+  const { showToast } = useToast();
 
   const [theme, setTheme] = useState(user?.settings.theme ?? 'light');
   const [language, setLanguage] = useState(user?.settings.language ?? 'th');
   const [notifyPromo, setNotifyPromo] = useState(user?.settings.notifyPromo ?? true);
+  const [clearCacheVisible, setClearCacheVisible] = useState(false);
 
   const saveTheme = (value: typeof theme) => {
     setTheme(value);
@@ -46,15 +50,18 @@ export default function SettingsScreen() {
   };
 
   const onClearCache = () => {
-    Alert.alert('ล้างแคช', 'ล้างประวัติการค้นหาทั้งหมด?', [
-      { text: 'ยกเลิก', style: 'cancel' },
-      { text: 'ล้าง', style: 'destructive', onPress: () => searchHistory.clear() },
-    ]);
+    setClearCacheVisible(true);
+  };
+
+  const onClearCacheConfirm = async () => {
+    await searchHistory.clear();
+    setClearCacheVisible(false);
+    showToast('ล้างประวัติการค้นหาแล้ว');
   };
 
   const onLogout = async () => {
     await logout();
-    router.replace('/(auth)/login');
+    router.replace('/(auth)/welcome');
   };
 
   return (
@@ -92,23 +99,32 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          <Pressable style={styles.row} onPress={() => saveNotifyPromo(!notifyPromo)}>
+          <PressableScale style={styles.row} onPress={() => saveNotifyPromo(!notifyPromo)}>
             <Checkbox
               checked={notifyPromo}
               onToggle={() => saveNotifyPromo(!notifyPromo)}
               accessibilityLabel="แจ้งเตือนโปรโมชัน"
             />
             <Text style={styles.rowLabel}>รับการแจ้งเตือนโปรโมชัน</Text>
-          </Pressable>
+          </PressableScale>
 
-          <Pressable style={styles.linkRow} onPress={onClearCache}>
+          <PressableScale style={styles.linkRow} onPress={onClearCache}>
             <Text style={styles.linkText}>ล้างแคช</Text>
-          </Pressable>
+          </PressableScale>
 
           <PressableScale style={styles.logoutButton} onPress={onLogout}>
             <Text style={styles.logoutText}>ออกจากระบบ</Text>
           </PressableScale>
         </ScrollView>
+        <ConfirmModal
+          visible={clearCacheVisible}
+          title="ล้างแคช"
+          message="ล้างประวัติการค้นหาทั้งหมด?"
+          confirmText="ล้าง"
+          destructive
+          onCancel={() => setClearCacheVisible(false)}
+          onConfirm={onClearCacheConfirm}
+        />
       </RequireAuth>
     </View>
   );
@@ -124,9 +140,9 @@ function Chip({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={[styles.chip, selected && styles.chipSelected]}>
+    <PressableScale onPress={onPress} style={[styles.chip, selected && styles.chipSelected]}>
       <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

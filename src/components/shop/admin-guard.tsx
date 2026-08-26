@@ -17,7 +17,12 @@ interface Props {
  */
 export function AdminGuard({ children }: Props) {
   const router = useRouter();
-  const { loading, isAuthenticated, user } = useAuth();
+  const { loading, isAuthenticated, user, isAdminSession, logout } = useAuth();
+
+  const switchToAdmin = async () => {
+    await logout();
+    router.replace('/(auth)/login?intent=admin');
+  };
 
   if (loading) {
     return (
@@ -42,16 +47,28 @@ export function AdminGuard({ children }: Props) {
     );
   }
 
-  if (!user?.isAdmin) {
+  if (!isAdminSession) {
+    const isAdminAccount = user?.isAdmin === true;
+
     return (
       <View style={styles.center}>
         <View style={styles.icon}>
           <ShieldAlert size={28} color={Brand.textSecondary} strokeWidth={2} />
         </View>
-        <Text style={styles.title}>หน้านี้สำหรับแอดมินเท่านั้น</Text>
-        <Text style={styles.subtitle}>บัญชีของคุณไม่มีสิทธิ์เข้าถึงส่วนนี้</Text>
-        <PressableScale style={styles.button} onPress={() => router.back()}>
-          <Text style={styles.buttonText}>ย้อนกลับ</Text>
+        <Text style={styles.title}>
+          {isAdminAccount ? 'คุณเข้าสู่ระบบในโหมดลูกค้า' : 'หน้านี้สำหรับแอดมินเท่านั้น'}
+        </Text>
+        <Text style={styles.subtitle}>
+          {isAdminAccount
+            ? 'กรุณาเข้าสู่ระบบผ่านช่องทางแอดมินเพื่อใช้งานส่วนนี้'
+            : 'บัญชีของคุณไม่มีสิทธิ์เข้าถึงส่วนนี้'}
+        </Text>
+        <PressableScale
+          style={styles.button}
+          onPress={isAdminAccount ? switchToAdmin : () => router.back()}>
+          <Text style={styles.buttonText}>
+            {isAdminAccount ? 'เข้าสู่ระบบแอดมิน' : 'ย้อนกลับ'}
+          </Text>
         </PressableScale>
       </View>
     );

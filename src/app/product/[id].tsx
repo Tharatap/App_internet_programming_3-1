@@ -62,9 +62,9 @@ export default function ProductDetailScreen() {
     return (
       <View style={styles.notFound}>
         <Text style={styles.notFoundText}>ไม่พบสินค้า</Text>
-        <Pressable onPress={() => router.back()}>
+        <PressableScale onPress={() => router.back()}>
           <Text style={styles.backLink}>ย้อนกลับ</Text>
-        </Pressable>
+        </PressableScale>
       </View>
     );
   }
@@ -137,12 +137,12 @@ export default function ProductDetailScreen() {
                 </Text>
               ) : null}
             </View>
-            <Pressable
+            <PressableScale
               hitSlop={8}
               accessibilityLabel="ข้อมูลการผ่อนชำระ"
               onPress={() => setInfoVisible(true)}>
               <Info size={20} color={Brand.textMuted} strokeWidth={2} />
-            </Pressable>
+            </PressableScale>
           </PixelPanel>
 
           {/* Energy meter */}
@@ -167,9 +167,9 @@ export default function ProductDetailScreen() {
           <Text style={styles.description} numberOfLines={expanded ? undefined : 2}>
             {product.description}
           </Text>
-          <Pressable onPress={() => setExpanded((v) => !v)} hitSlop={8}>
+          <PressableScale onPress={() => setExpanded((v) => !v)} hitSlop={8}>
             <Text style={styles.readMore}>{expanded ? 'ย่อลง' : 'อ่านเพิ่มเติม'}</Text>
-          </Pressable>
+          </PressableScale>
 
           {/* Specs */}
           <View style={styles.section}>

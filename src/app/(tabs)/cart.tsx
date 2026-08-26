@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { ChevronRight, MapPin } from 'lucide-react-native';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Checkbox } from '@/components/shop/checkbox';
@@ -10,6 +10,7 @@ import { QuantityStepper } from '@/components/shop/quantity-stepper';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { TopBar } from '@/components/shop/top-bar';
+import { useToast } from '@/components/shop/toast';
 import { Brand, PixelBorder, PixelFonts, PixelShadow, Radius } from '@/constants/theme';
 import { useShop } from '@/store/shop-store';
 import { formatBaht } from '@/utils/format';
@@ -17,6 +18,7 @@ import { formatBaht } from '@/utils/format';
 export default function CartScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { showToast } = useToast();
   const {
     cart,
     selectedTotal,
@@ -29,7 +31,7 @@ export default function CartScreen() {
 
   const onCheckout = () => {
     if (!cart.some((item) => item.selected)) {
-      Alert.alert('กรุณาเลือกสินค้า', 'เลือกสินค้าอย่างน้อย 1 ชิ้นก่อนชำระเงิน');
+      showToast('เลือกสินค้าอย่างน้อย 1 ชิ้นก่อนชำระเงิน');
       return;
     }
     router.push('/checkout/address');
@@ -45,7 +47,7 @@ export default function CartScreen() {
         contentContainerStyle={styles.content}>
         {/* Delivery address */}
         <PixelPanel shadowOffset={PixelShadow.sm} style={styles.address}>
-          <Pressable style={styles.addressInner} onPress={() => router.push('/addresses')}>
+          <PressableScale style={styles.addressInner} onPress={() => router.push('/addresses')}>
             <MapPin size={18} color={Brand.text} strokeWidth={2} />
             <View style={styles.addressBody}>
               <Text style={styles.addressLabel}>จัดส่งไปที่</Text>
@@ -54,7 +56,7 @@ export default function CartScreen() {
               </Text>
             </View>
             <ChevronRight size={18} color={Brand.textMuted} strokeWidth={2} />
-          </Pressable>
+          </PressableScale>
         </PixelPanel>
 
         {cart.length === 0 ? (
@@ -62,7 +64,7 @@ export default function CartScreen() {
         ) : (
           <>
             {/* Select all */}
-            <Pressable
+            <PressableScale
               style={styles.selectAll}
               onPress={() => setAllSelected(!allSelected)}>
               <Checkbox
@@ -71,7 +73,7 @@ export default function CartScreen() {
                 accessibilityLabel="เลือกทั้งหมด"
               />
               <Text style={styles.selectAllText}>เลือกทั้งหมด</Text>
-            </Pressable>
+            </PressableScale>
 
             {/* Items */}
             <View style={styles.items}>

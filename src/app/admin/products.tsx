@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Plus, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
-import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { catalogApi } from '@/api/catalog';
@@ -10,6 +10,7 @@ import { DeleteConfirmModal } from '@/components/shop/delete-confirm-modal';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { TopBar } from '@/components/shop/top-bar';
+import { useToast } from '@/components/shop/toast';
 import { Brand, PixelBorder, PixelFonts, Radius } from '@/constants/theme';
 import { useAuth } from '@/store/auth-store';
 import { useCatalog } from '@/store/catalog-store';
@@ -20,6 +21,7 @@ export default function AdminProductsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { token } = useAuth();
+  const { showToast } = useToast();
   const { products, categories, refresh } = useCatalog();
 
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
@@ -36,7 +38,7 @@ export default function AdminProductsScreen() {
       refresh();
       setDeleteTarget(null);
     } catch (err) {
-      Alert.alert('ลบสินค้าไม่สำเร็จ', err instanceof Error ? err.message : 'กรุณาลองใหม่อีกครั้ง');
+      showToast(err instanceof Error ? err.message : 'ลบสินค้าไม่สำเร็จ');
     } finally {
       setDeleting(false);
     }

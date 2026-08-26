@@ -1,12 +1,26 @@
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import { Heart, House, LayoutGrid, ShoppingCart, User } from 'lucide-react-native';
-import { Platform } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 
 import { Brand, PixelBorder, PixelFonts } from '@/constants/theme';
+import { useAuth } from '@/store/auth-store';
 import { useShop } from '@/store/shop-store';
 
 export default function TabsLayout() {
   const { cartCount } = useShop();
+  const { loading, isAuthenticated, isGuest } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator color={Brand.text} />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated && !isGuest) {
+    return <Redirect href="/(auth)/welcome" />;
+  }
 
   return (
     <Tabs
@@ -65,3 +79,12 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Brand.background,
+  },
+});

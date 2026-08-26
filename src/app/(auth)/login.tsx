@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -9,16 +9,17 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PressableScale } from '@/components/shop/pressable-scale';
+import { TopBar } from '@/components/shop/top-bar';
 import { Brand, Radius } from '@/constants/theme';
 import { useAuth } from '@/store/auth-store';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { login } = useAuth();
+  const { intent } = useLocalSearchParams<{ intent?: string }>();
+  const { login, logout } = useAuth();
+  const isAdminIntent = intent === 'admin';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,7 +34,22 @@ export default function LoginScreen() {
     setError(null);
     setSubmitting(true);
     try {
-      await login(email.trim(), password);
+      const loggedInUser = await login(
+        email.trim(),
+        password,
+        isAdminIntent ? 'admin' : 'customer'
+      );
+      if (isAdminIntent) {
+        if (loggedInUser.isAdmin) {
+          router.replace('/(tabs)');
+          router.push('/admin/products');
+          return;
+        }
+
+        await logout();
+        setError('บัญชีนี้ไม่มีสิทธิ์แอดมิน');
+        return;
+      }
       router.replace('/(tabs)');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'เข้าสู่ระบบไม่สำเร็จ');
@@ -46,10 +62,15 @@ export default function LoginScreen() {
     <KeyboardAvoidingView
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <TopBar
+        variant="list"
+        title={isAdminIntent ? 'เข้าสู่ระบบแอดมิน' : 'เข้าสู่ระบบ'}
+        showBack
+        onBack={() => router.replace('/(auth)/welcome')}
+      />
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 40 }]}
+        contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>เข้าสู่ระบบ</Text>
         <Text style={styles.subtitle}>ยินดีต้อนรับกลับสู่ Chaje Electric</Text>
 
         <View style={styles.form}>
@@ -107,12 +128,8 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 24,
+    paddingTop: 24,
     paddingBottom: 40,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: Brand.text,
   },
   subtitle: {
     fontSize: 14,

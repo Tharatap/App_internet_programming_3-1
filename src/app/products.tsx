@@ -1,9 +1,10 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProductCard } from '@/components/shop/product-card';
+import { PressableScale } from '@/components/shop/pressable-scale';
 import { TopBar } from '@/components/shop/top-bar';
 import {
   defaultFilterValue,
@@ -97,24 +98,24 @@ export default function ProductListScreen() {
           {FILTERS.map((filterOption) => {
             const selected = filterOption === active;
             return (
-              <Pressable
+              <PressableScale
                 key={filterOption}
                 onPress={() => setActive(filterOption)}
                 style={[styles.chip, selected && styles.chipSelected]}>
                 <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
                   {filterOption}
                 </Text>
-              </Pressable>
+              </PressableScale>
             );
           })}
-          <Pressable
+          <PressableScale
             onPress={() => setFilterVisible(true)}
             style={[styles.chip, activeFilterCount > 0 && styles.chipSelected]}>
             <Text
               style={[styles.chipText, activeFilterCount > 0 && styles.chipTextSelected]}>
               ตัวกรอง{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
             </Text>
-          </Pressable>
+          </PressableScale>
         </ScrollView>
       </View>
 

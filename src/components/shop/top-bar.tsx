@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HeartButton } from '@/components/shop/heart-button';
 import { IconButton } from '@/components/shop/icon-button';
+import { PressableScale } from '@/components/shop/pressable-scale';
 import { Brand, PixelBorder, PixelFonts } from '@/constants/theme';
 
 interface HomeProps {
@@ -20,6 +21,7 @@ interface HomeProps {
   addressLabel?: string;
   address: string;
   hasNotification?: boolean;
+  onAddressPress?: () => void;
   onSettings?: () => void;
   onNotification?: () => void;
 }
@@ -28,6 +30,9 @@ interface ListProps {
   variant: 'list';
   title: string;
   showBack?: boolean;
+  onBack?: () => void;
+  /** ต้องส่ง onOptions มาด้วยถึงจะแสดงปุ่มตัวเลือก */
+  showOptions?: boolean;
   showFilter?: boolean;
   onFilter?: () => void;
   onOptions?: () => void;
@@ -41,20 +46,30 @@ export function TopBar(props: Props) {
   const paddingTop = insets.top + 8;
 
   if (props.variant === 'home') {
+    const addressContent = (
+      <>
+        <View style={styles.addressLabelRow}>
+          <MapPin size={12} color={Brand.textSecondary} strokeWidth={2} />
+          <Text style={styles.addressLabel}>{props.addressLabel ?? 'จัดส่งไปที่'}</Text>
+        </View>
+        <Text style={styles.address} numberOfLines={1}>
+          {props.address}
+        </Text>
+      </>
+    );
+
     return (
       <View style={[styles.container, { paddingTop }]}>
         <IconButton variant="favorite" onPress={props.onSettings} accessibilityLabel="ตั้งค่า">
           <Settings size={20} color={Brand.text} strokeWidth={1.75} />
         </IconButton>
-        <View style={styles.homeCenter}>
-          <View style={styles.addressLabelRow}>
-            <MapPin size={12} color={Brand.textSecondary} strokeWidth={2} />
-            <Text style={styles.addressLabel}>{props.addressLabel ?? 'จัดส่งไปที่'}</Text>
-          </View>
-          <Text style={styles.address} numberOfLines={1}>
-            {props.address}
-          </Text>
-        </View>
+        {props.onAddressPress ? (
+          <PressableScale style={styles.homeCenter} onPress={props.onAddressPress}>
+            {addressContent}
+          </PressableScale>
+        ) : (
+          <View style={styles.homeCenter}>{addressContent}</View>
+        )}
         <IconButton
           onPress={props.onNotification}
           showBadgeDot={props.hasNotification}
@@ -68,13 +83,36 @@ export function TopBar(props: Props) {
   return <ListBar {...props} paddingTop={paddingTop} />;
 }
 
-function ListBar({ title, showBack, showFilter, onFilter, onOptions, paddingTop }: ListProps & { paddingTop: number }) {
+function ListBar({
+  title,
+  showBack,
+  onBack,
+  showOptions = false,
+  showFilter,
+  onFilter,
+  onOptions,
+  paddingTop,
+}: ListProps & { paddingTop: number }) {
   const router = useRouter();
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+      return;
+    }
+
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
+  };
+
   return (
     <View style={[styles.container, { paddingTop }]}>
       <View style={styles.listLeft}>
         {showBack ? (
-          <IconButton onPress={() => router.back()} accessibilityLabel="ย้อนกลับ">
+          <IconButton onPress={handleBack} accessibilityLabel="ย้อนกลับ">
             <ChevronLeft size={22} color={Brand.text} strokeWidth={2} />
           </IconButton>
         ) : null}
@@ -88,9 +126,11 @@ function ListBar({ title, showBack, showFilter, onFilter, onOptions, paddingTop 
             <SlidersHorizontal size={18} color={Brand.text} strokeWidth={2} />
           </IconButton>
         ) : null}
-        <IconButton onPress={onOptions} accessibilityLabel="ตัวเลือก">
-          <MoreHorizontal size={20} color={Brand.text} strokeWidth={2} />
-        </IconButton>
+        {showOptions && onOptions ? (
+          <IconButton onPress={onOptions} accessibilityLabel="ตัวเลือก">
+            <MoreHorizontal size={20} color={Brand.text} strokeWidth={2} />
+          </IconButton>
+        ) : null}
       </View>
     </View>
   );

@@ -1,14 +1,16 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { MapPin } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { addressesApi } from '@/api/addresses';
 import { AddressCard } from '@/components/shop/address-card';
+import { ConfirmModal } from '@/components/shop/confirm-modal';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { TopBar } from '@/components/shop/top-bar';
+import { useToast } from '@/components/shop/toast';
 import { Brand, Radius } from '@/constants/theme';
 import { useAuth } from '@/store/auth-store';
 import { Address } from '@/types/shop';
@@ -17,8 +19,10 @@ export default function AddressesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
+  const { showToast } = useToast();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pendingDelete, setPendingDelete] = useState<Address | null>(null);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -41,17 +45,19 @@ export default function AddressesScreen() {
 
   const onDelete = (address: Address) => {
     if (!token) return;
-    Alert.alert('ลบที่อยู่นี้?', address.line1, [
-      { text: 'ยกเลิก', style: 'cancel' },
-      {
-        text: 'ลบ',
-        style: 'destructive',
-        onPress: async () => {
-          await addressesApi.remove(token, address.id);
-          load();
-        },
-      },
-    ]);
+    setPendingDelete(address);
+  };
+
+  const onDeleteConfirm = async () => {
+    if (!token || !pendingDelete) return;
+    try {
+      await addressesApi.remove(token, pendingDelete.id);
+      await load();
+    } catch {
+      showToast('ลบที่อยู่ไม่สำเร็จ');
+    } finally {
+      setPendingDelete(null);
+    }
   };
 
   return (
@@ -88,6 +94,15 @@ export default function AddressesScreen() {
             <Text style={styles.addButtonText}>+ เพิ่มที่อยู่ใหม่</Text>
           </PressableScale>
         </View>
+        <ConfirmModal
+          visible={!!pendingDelete}
+          title="ลบที่อยู่นี้?"
+          message={pendingDelete?.line1}
+          confirmText="ลบ"
+          destructive
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={onDeleteConfirm}
+        />
       </RequireAuth>
     </View>
   );

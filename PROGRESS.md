@@ -3,12 +3,16 @@
 > **สำหรับ AI:** อ่านไฟล์นี้ก่อนเริ่มงานเสมอ เพื่อไม่ต้องสำรวจโค้ดซ้ำ (ประหยัด token)
 > **ทำงานเสร็จแต่ละก้อน → กลับมาอัปเดตไฟล์นี้ทันที** (ดูวิธีอัปเดตท้ายไฟล์)
 
-**อัปเดตล่าสุด:** 2026-08-12 · **สถานะรวม:** Phase 1 เสร็จ 100% · Phase 2: PART A (backend) ✅ deploy สำเร็จ+ทดสอบผ่านหมด ·
+**อัปเดตล่าสุด:** 2026-08-13 · **สถานะรวม:** Phase 1 เสร็จ 100% · Phase 2: PART A (backend) ✅ deploy สำเร็จ+ทดสอบผ่านหมด ·
 PART B (auth+เชื่อม API) ✅ เขียนเสร็จ+**ทดสอบผ่านจริงจากเบราว์เซอร์แล้ว** (login ใช้งานได้) ·
 PART C (ทำให้ปุ่มที่เหลือใช้งานได้จริง) ✅ เขียนเสร็จ ยังไม่ทดสอบครบทุก flow ·
 🎨 **Pixel Theme Reskin** ✅ เขียนเสร็จทั้งแอป ผ่าน typecheck 0 error + bundle สำเร็จ + **เปิดดูจริงบนเบราว์เซอร์แล้ว ผ่าน** (2026-08-06) ·
 🛠️ **แอดมิน: เพิ่ม/แก้ไข/ลบสินค้า** ✅ เขียนเสร็จ `tsc --noEmit` ผ่าน 0 error ยังไม่ได้ทดสอบจริง (ต้องรัน SQL + deploy backend ก่อน)
-· PART D ก้อนที่ 1 (Error Boundary + Offline Handling) ✅ เขียนเสร็จและ `tsc --noEmit` ผ่าน 0 error
+· PART D ก้อนที่ 1 (Error Boundary + Offline Handling) ✅ เขียนเสร็จและ `tsc --noEmit` ผ่าน 0 error ·
+🔐 **Auth Gateway** ✅ welcome 4 ทางเลือก + guest mode + admin session role — `tsc --noEmit` ผ่าน 0 error
++ **ทดสอบมือบนเบราว์เซอร์ผ่านครบทุก flow แล้ว** (2026-08-13) ·
+🧹 **Cleanup ปุ่ม/ระบบที่ใช้จริงไม่ได้** ✅ เก็บก้อน 1,2,3,5 เสร็จ (เหลือก้อน 4 ธีม/ภาษา รอตัดสินใจ)
+— รายละเอียดใน `CLEANUP_PLAN.md`
 
 ---
 
@@ -47,6 +51,63 @@ PART C (ทำให้ปุ่มที่เหลือใช้งานไ
 - ✅ Responsive บนเว็บ — จอกว้างแสดงเป็นคอลัมน์มือถือกลางจอ (`AppFrameWidth = 480` ใน theme.ts)
 - ✅ Animation: กดปุ่มย่อ 0.97, การ์ด fade-in แบบ stagger, หัวใจ micro-bounce
 - ✅ `npx tsc --noEmit` ผ่าน 0 error
+
+---
+
+## 🔐 Auth Gateway — welcome 4 ทางเลือก (2026-08-13)
+
+**สถานะ: ทดสอบมือบนเบราว์เซอร์ผ่านครบทุก flow แล้ว** — เข้าแอปเจอ welcome ก่อนเสมอ ·
+guest เข้าดูสินค้าได้/ออกจากโหมดได้ · login ลูกค้าด้วยบัญชีแอดมินไม่ได้สิทธิ์แอดมิน ·
+โหมดแอดมิน refresh แล้วไม่หลุด · ปุ่มย้อนกลับจาก URL ตรงทำงาน
+
+- `src/app/(auth)/welcome.tsx:10` — หน้าแรก 4 ทางเลือก: เข้าสู่ระบบ / สมัครสมาชิก / ผู้เยี่ยมชม / แอดมิน
+- `src/store/auth-store.tsx:23` — เพิ่ม `isGuest`, `enterGuestMode()`, `exitGuestMode()`; `login()` คืน `Promise<ApiUser>`
+  เพื่อเช็ค `isAdmin` จากผล login ทันทีโดยไม่อ่าน context ค่าเก่า และ `logout()` reset guest mode
+- `src/app/(tabs)/_layout.tsx:11` — ระหว่าง restore แสดง spinner; ถ้า `!isAuthenticated && !isGuest`
+  redirect ไป `/(auth)/welcome` ด้วย typed route โดยตรง
+- `src/app/(auth)/login.tsx:20` — รับ `?intent=admin` ผ่าน `useLocalSearchParams`; แอดมินเข้า `/admin/products`
+  โดยวาง `(tabs)` ไว้ใน stack สำหรับปุ่มย้อนกลับ ส่วนบัญชีทั่วไปถูก logout พร้อมแสดง error
+- `src/app/(tabs)/profile.tsx:54` — guest state พร้อมปุ่มเข้าสู่ระบบและปุ่มออกจากโหมดผู้เยี่ยมชม
+- `src/app/(auth)/_layout.tsx:12` — declare screen `welcome`
+- `src/components/shop/top-bar.tsx:27` — `ListProps` เพิ่ม `onBack?`, `showOptions?` (default `true`)
+  และปุ่ม back มี fallback `canGoBack()` → `/(tabs)` สำหรับกรณีเปิดหน้าจาก URL ตรงบนเว็บ
+- `src/app/(auth)/login.tsx` + `src/app/(auth)/register.tsx` — เพิ่ม TopBar พร้อมปุ่มย้อนกลับไป welcome
+- `src/app/(tabs)/profile.tsx:51` — logout กลับไป `/(auth)/welcome` แทน `/login`
+- `src/store/auth-store.tsx` — เพิ่ม `sessionRole` (`customer` | `admin`) + `isAdminSession` แยกบัญชีแอดมิน
+  ออกจากเซสชันที่เปิดสิทธิ์แอดมิน; `login()` รับ mode เป็นพารามิเตอร์ที่ 3 และ persist ด้วย key
+  `chaje_session_role` เพื่อให้ refresh แล้วไม่หลุดโหมดแอดมิน
+- `src/app/(tabs)/profile.tsx` + `src/components/shop/admin-guard.tsx` — เช็ค `isAdminSession`
+  แทน `user?.isAdmin` พร้อมทางลัดสลับไปโหมดแอดมิน
+
+---
+
+## 🧹 Cleanup — ปุ่ม/ระบบที่ "มีอยู่แต่ใช้จริงไม่ได้" (2026-08-13)
+
+> ตรวจโค้ดทั้งโปรเจกต์แล้วแยกเป็น 5 ก้อน — **แผนเต็ม + prompt อยู่ใน `CLEANUP_PLAN.md`**
+> ทำเสร็จแล้ว 4 ก้อน เหลือก้อน 4 (ธีม/ภาษา) ที่ต้องตัดสินใจก่อนว่าจะทำจริงหรือใส่ป้าย "เร็วๆ นี้"
+
+- ✅ **ก้อน 1** — `Alert.alert` ของ react-native-web เป็นเมธอดว่าง (`static alert() {}`)
+  ทำให้ Alert 11 จุดตายเงียบบนเว็บ **ปุ่มลบที่อยู่กับปุ่มล้างแคชตายสนิท** เพราะโค้ดจริงอยู่ใน callback
+  → สร้าง `src/components/shop/confirm-modal.tsx` + `src/components/shop/toast.tsx`
+  (`ToastProvider` อยู่ระหว่าง `CatalogProvider` กับ `ShopProvider` ใน `src/app/_layout.tsx`
+  เพราะ `shop-store` เป็นคนเรียก `useToast()`) · `grep -rn "Alert.alert" src/` เหลือ 0
+- ✅ **ก้อน 2** — `src/components/shop/top-bar.tsx` ปุ่ม `⋯` เคยขึ้นทุกหน้าโดยไม่มีหน้าไหนส่ง
+  `onOptions` เลย → default `showOptions` เป็น `false` + render เมื่อ `showOptions && onOptions`
+- ✅ **ก้อน 3** — ที่อยู่บนหัว Home เคย hardcode → ดึงจาก `addressesApi` จริง + กดไปหน้า `/addresses` ได้
+  (`top-bar.tsx` เพิ่ม `onAddressPress?` ใน `HomeProps`) · จำนวนคูปองในโปรไฟล์ดึงจาก `couponsApi` จริง
+- ✅ **ก้อน 5** — `settings.tsx` logout → `/(auth)/welcome` · `isAdminSession` ย้ายเข้า `useMemo` ·
+  `Pressable` → `PressableScale` 9 จุด (กฎเหล็กข้อ 4)
+
+### ⚠️ ข้อจำกัดที่รู้อยู่
+
+- guest mode ไม่ persist ลง secureStorage โดยตั้งใจ → refresh บนเว็บจะเด้งกลับหน้า welcome ทุกครั้ง
+- **ธีม/ภาษา/แจ้งเตือนโปรฯ ในหน้าตั้งค่า บันทึกลง DB ได้จริง แต่ไม่มีผลกับแอปเลย**
+  (ไม่มี dark mode จริง · ไม่มี i18n · ไม่มี push) ← ก้อน 4 ใน `CLEANUP_PLAN.md`
+- เหรียญในโปรไฟล์ + เวลานับถอยหลัง Flash Sale เป็นค่าตกแต่ง ติด `// TODO(fake-data):` กำกับไว้แล้ว
+- `Pressable` เปล่ายังเหลืออีก 8 จุด (search, address-card, filter-sheet, section-header) — ปุ่มรอง ไม่เร่ง
+- toast บน native ชิดขอบจอ ไม่มีระยะห่าง 16px (บนเว็บถูกต้องแล้ว)
+- sessionRole เป็นการกั้นระดับ UI เท่านั้น — ความปลอดภัยจริงอยู่ที่ `server/middleware/admin.js`
+  ที่เช็ค is_admin สดจาก DB ทุก request (ทำไว้แล้ว)
 
 ---
 
@@ -454,6 +515,7 @@ Router typed-routes codegen (`.expo/types/router.d.ts`) ไม่ยอมรว
 |------|---------|
 | `AGENTS.md` | กฎการทำงาน (โหลดอัตโนมัติทุก session ผ่าน `CLAUDE.md`) |
 | `PROGRESS.md` | ไฟล์นี้ — บันทึกความคืบหน้า |
+| `CLEANUP_PLAN.md` | **ผลตรวจ "ปุ่ม/ระบบที่มีอยู่แต่ใช้จริงไม่ได้" (2026-08-13) + prompt พร้อมส่ง Codex 5 ก้อน** |
 | `Phase1_UI_prompt.md` | โจทย์ตั้งต้น Phase 1 (UI) — ทำเสร็จแล้ว |
 | `Phase1.md` | แผน Phase 2 (backend + ทำให้ใช้งานได้จริง) — ยังไม่เริ่ม |
 | `รายงาน_3ส่วนUI.md` | เอกสารประกอบรายงานส่งอาจารย์ (Header / Detail / Bottom Tab) |

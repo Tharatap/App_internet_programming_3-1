@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { addressesApi } from '@/api/addresses';
 import { notificationsApi } from '@/api/notifications';
 import { CategoryIcon } from '@/components/shop/category-icon';
 import { PixelPanel } from '@/components/shop/pixel-panel';
@@ -21,21 +22,28 @@ import { formatCountdown } from '@/utils/format';
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  // TODO(fake-data): ค่าตกแต่งชั่วคราวจนกว่า backend จะมีเวลาจบ Flash Sale
   const countdown = useCountdown(3 * 3600 + 23);
   const { categories, flashSaleProducts, recommendedProducts } = useCatalog();
   const { token } = useAuth();
   const [hasUnread, setHasUnread] = useState(false);
+  const [deliveryAddress, setDeliveryAddress] = useState('ยังไม่ได้ตั้งที่อยู่จัดส่ง');
 
   useFocusEffect(
     useCallback(() => {
       if (!token) {
         setHasUnread(false);
+        setDeliveryAddress('ยังไม่ได้ตั้งที่อยู่จัดส่ง');
         return;
       }
-      notificationsApi
-        .list(token)
-        .then((list) => setHasUnread(list.some((n) => !n.isRead)))
-        .catch(() => {});
+      Promise.all([
+        notificationsApi.list(token).catch(() => []),
+        addressesApi.list(token).catch(() => []),
+      ]).then(([notifications, addresses]) => {
+        setHasUnread(notifications.some((notification) => !notification.isRead));
+        const address = addresses.find((item) => item.isDefault) ?? addresses[0];
+        setDeliveryAddress(address?.line1 ?? 'ยังไม่ได้ตั้งที่อยู่จัดส่ง');
+      });
     }, [token])
   );
 
@@ -50,8 +58,9 @@ export default function HomeScreen() {
     <View style={styles.screen}>
       <TopBar
         variant="home"
-        address="92 ถ.สุขุมวิท กรุงเทพฯ"
+        address={deliveryAddress}
         hasNotification={hasUnread}
+        onAddressPress={() => router.push('/addresses')}
         onSettings={() => router.push('/settings')}
         onNotification={() => router.push('/notifications')}
       />

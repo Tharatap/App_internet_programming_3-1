@@ -9,15 +9,14 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PressableScale } from '@/components/shop/pressable-scale';
+import { TopBar } from '@/components/shop/top-bar';
 import { Brand, Radius } from '@/constants/theme';
 import { useAuth } from '@/store/auth-store';
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { register } = useAuth();
 
   const [name, setName] = useState('');
@@ -51,10 +50,15 @@ export default function RegisterScreen() {
     <KeyboardAvoidingView
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <TopBar
+        variant="list"
+        title="สมัครสมาชิก"
+        showBack
+        onBack={() => router.replace('/(auth)/welcome')}
+      />
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 40 }]}
+        contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>สมัครสมาชิก</Text>
         <Text style={styles.subtitle}>สร้างบัญชีเพื่อเริ่มช้อปกับ Chaje Electric</Text>
 
         <View style={styles.form}>
@@ -124,12 +128,8 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 24,
+    paddingTop: 24,
     paddingBottom: 40,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: Brand.text,
   },
   subtitle: {
     fontSize: 14,

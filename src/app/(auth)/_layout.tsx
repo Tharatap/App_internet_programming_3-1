@@ -9,6 +9,7 @@ export default function AuthLayout() {
         headerShown: false,
         contentStyle: { backgroundColor: Brand.background },
       }}>
+      <Stack.Screen name="welcome" />
       <Stack.Screen name="login" />
       <Stack.Screen name="register" />
     </Stack>

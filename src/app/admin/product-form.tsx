@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Trash2 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { catalogApi } from '@/api/catalog';
@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/shop/checkbox';
 import { DeleteConfirmModal } from '@/components/shop/delete-confirm-modal';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { TopBar } from '@/components/shop/top-bar';
+import { useToast } from '@/components/shop/toast';
 import { Brand, PixelBorder, Radius } from '@/constants/theme';
 import { useAuth } from '@/store/auth-store';
 import { useCatalog } from '@/store/catalog-store';
@@ -35,6 +36,7 @@ export default function AdminProductFormScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
+  const { showToast } = useToast();
   const { categories, getProductById, refresh } = useCatalog();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const isEditing = !!id;
@@ -128,7 +130,7 @@ export default function AdminProductFormScreen() {
       refresh();
       router.replace('/admin/products');
     } catch (err) {
-      Alert.alert('ลบสินค้าไม่สำเร็จ', err instanceof Error ? err.message : 'กรุณาลองใหม่อีกครั้ง');
+      showToast(err instanceof Error ? err.message : 'ลบสินค้าไม่สำเร็จ');
     } finally {
       setDeleting(false);
     }
