@@ -17,6 +17,13 @@ import { useShop } from '@/store/shop-store';
 import { useBrand } from '@/store/theme-store';
 import { formatBaht } from '@/utils/format';
 
+/**
+ * แท็บตะกร้าสินค้า
+ *
+ * ข้อมูลตะกร้าทั้งหมดอยู่ใน shop-store (ไม่ได้เก็บ state ในหน้านี้)
+ * ทำให้ badge ตัวเลขบนแท็บและหน้าอื่นๆ เห็นค่าตรงกันเสมอ
+ * ทั้งหน้าถูกครอบด้วย RequireAuth → ผู้เยี่ยมชมที่ยังไม่ล็อกอินจะเจอปุ่มให้เข้าสู่ระบบแทน
+ */
 export default function CartScreen() {
   const styles = useStyles(makeStyles);
   const Brand = useBrand();
@@ -31,10 +38,13 @@ export default function CartScreen() {
     setAllSelected,
   } = useShop();
 
+  // ติ๊ก "เลือกทั้งหมด" จะติ๊กเองก็ต่อเมื่อทุกรายการถูกเลือกครบจริงๆ
   const allSelected = cart.length > 0 && cart.every((item) => item.selected);
 
+  /** ไปขั้นตอนชำระเงิน — ต้องเลือกสินค้าอย่างน้อย 1 ชิ้นก่อน (server ก็เช็คซ้ำอีกชั้น) */
   const onCheckout = () => {
     if (!cart.some((item) => item.selected)) {
+      // ใช้ toast ไม่ใช่ Alert เพราะ Alert ของ react-native-web เป็นเมธอดว่าง ไม่ทำงานบนเว็บ
       showToast('เลือกสินค้าอย่างน้อย 1 ชิ้นก่อนชำระเงิน');
       return;
     }

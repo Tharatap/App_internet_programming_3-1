@@ -17,6 +17,11 @@ import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
 import { useBrand } from '@/store/theme-store';
 
+/**
+ * หน้าสมัครสมาชิก
+ * ทางเดินของข้อมูล: onSubmit() → auth-store.register() → POST /api/auth/register
+ * ฝั่ง server จะ bcrypt.hash รหัสผ่านก่อนเก็บ แล้วคืน JWT กลับมาให้ล็อกอินต่อได้เลย
+ */
 export default function RegisterScreen() {
   const styles = useStyles(makeStyles);
   const Brand = useBrand();
@@ -30,6 +35,8 @@ export default function RegisterScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   const onSubmit = async () => {
+    // ตรวจฝั่งแอปก่อนยิง API เพื่อให้ผู้ใช้รู้ผลทันที ไม่ต้องรอ round-trip
+    // (ฝั่ง server ตรวจซ้ำอีกชั้นเสมอ — ห้ามเชื่อการตรวจฝั่งแอปอย่างเดียว)
     if (!name || !email || !password) {
       setError('กรุณากรอกข้อมูลให้ครบทุกช่อง');
       return;
@@ -46,9 +53,11 @@ export default function RegisterScreen() {
     setError(null);
     setSubmitting(true);
     try {
+      // ส่งค่าที่ normalize แล้ว (ตัดช่องว่างหัวท้าย) ตัวเดียวกับที่ใช้ตรวจ
       await register(normalizedEmail, password, name.trim());
       router.replace('/(tabs)');
     } catch (err) {
+      // เช่น อีเมลซ้ำ → server คืน 409 พร้อมข้อความไทย 'อีเมลนี้ถูกใช้งานแล้ว'
       setError(err instanceof Error ? err.message : 'สมัครสมาชิกไม่สำเร็จ');
     } finally {
       setSubmitting(false);

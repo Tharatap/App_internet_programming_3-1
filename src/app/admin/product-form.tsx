@@ -1,3 +1,4 @@
+import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Trash2 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
@@ -5,6 +6,7 @@ import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { catalogApi } from '@/api/catalog';
+import { uploadsApi } from '@/api/uploads';
 import { AdminGuard } from '@/components/shop/admin-guard';
 import { Checkbox } from '@/components/shop/checkbox';
 import { DeleteConfirmModal } from '@/components/shop/delete-confirm-modal';
@@ -34,6 +36,14 @@ const emptyForm: ProductInput = {
   branchStock: [],
 };
 
+/**
+ * ฟอร์มสินค้าของแอดมิน — **ใช้ไฟล์เดียวทั้งเพิ่มและแก้ไข**
+ *   /admin/product-form          → โหมดเพิ่มสินค้าใหม่
+ *   /admin/product-form?id=p123  → โหมดแก้ไข (isEditing = true)
+ *
+ * หน้านี้ถูกกันด้วย AdminGuard และทุก endpoint ที่เรียกถูกกันด้วย adminOnly ฝั่ง server อีกชั้น
+ * ทางเดินของข้อมูล: onSubmit() → catalogApi → POST/PUT /api/products → refresh()
+ */
 export default function AdminProductFormScreen() {
   const styles = useStyles(makeStyles);
   const Brand = useBrand();
@@ -43,15 +53,18 @@ export default function AdminProductFormScreen() {
   const { showToast } = useToast();
   const { categories, getProductById, refresh } = useCatalog();
   const { id } = useLocalSearchParams<{ id?: string }>();
+  // มี ?id= ใน URL หรือไม่ = ตัวแยกว่าโหมดเพิ่มหรือแก้ไข
   const isEditing = !!id;
 
   const [form, setForm] = useState<ProductInput>(emptyForm);
   const [imagesText, setImagesText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // โหมดแก้ไข: ดึงสินค้าเดิมจาก catalog-store (โหลดไว้แล้ว ไม่ต้องยิง API ซ้ำ) มาเติมลงฟอร์ม
   useEffect(() => {
     if (!isEditing) return;
     const product = getProductById(id!);
@@ -92,8 +105,48 @@ export default function AdminProductFormScreen() {
       form.branchStock.filter((_, i) => i !== index)
     );
 
+  const onPickImage = async () => {
+    if (!token) return;
+
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        showToast('ไม่ได้รับสิทธิ์เข้าถึงรูปภาพ');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.7,
+        base64: true,
+      });
+      if (result.canceled) return;
+
+      const asset = result.assets[0];
+      if (!asset.base64) {
+        showToast('อ่านไฟล์ไม่สำเร็จ');
+        return;
+      }
+
+      setUploading(true);
+      const { url } = await uploadsApi.uploadImage(token, {
+        fileName: asset.fileName ?? 'image.jpg',
+        mimeType: asset.mimeType ?? 'image/jpeg',
+        data: asset.base64,
+      });
+      setImagesText((prev) => (prev.trim() ? `${prev.trim()}\n${url}` : url));
+      showToast('อัปโหลดรูปสำเร็จ');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'อัปโหลดรูปไม่สำเร็จ');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  /** บันทึกฟอร์ม — ปุ่มเดียวใช้ทั้ง "เพิ่ม" และ "แก้ไข" แยกด้วย isEditing */
   const onSubmit = async () => {
     if (!token) return;
+    // ตรวจฝั่งแอปก่อน (server ตรวจซ้ำที่ validateProductInput() อีกชั้นเสมอ)
     if (!form.name || !form.categoryId || !form.description) {
       setError('กรุณากรอกชื่อ หมวดหมู่ และคำอธิบายสินค้าให้ครบ');
       return;
@@ -107,6 +160,7 @@ export default function AdminProductFormScreen() {
     try {
       const payload: ProductInput = {
         ...form,
+        // ช่องรูปภาพให้พิมพ์ URL บรรทัดละ 1 ลิงก์ → แปลงเป็น array และตัดบรรทัดว่างทิ้ง
         images: imagesText
           .split('\n')
           .map((line) => line.trim())
@@ -117,21 +171,27 @@ export default function AdminProductFormScreen() {
       } else {
         await catalogApi.createProduct(token, payload);
       }
+      // สั่ง catalog-store โหลดสินค้าใหม่ทั้งชุด เพื่อให้ทุกหน้าในแอป
+      // (หน้าแรก, หมวดหมู่, รายละเอียดสินค้า) เห็นข้อมูลที่เพิ่งแก้ทันที
       refresh();
       router.back();
     } catch (err) {
+      // เช่นไม่ใช่แอดมิน → server คืน 403 'เฉพาะแอดมินเท่านั้น'
       setError(err instanceof Error ? err.message : 'บันทึกไม่สำเร็จ');
     } finally {
       setSubmitting(false);
     }
   };
 
+  /** ลบสินค้า — เรียกจาก DeleteConfirmModal ที่บังคับให้พิมพ์ "Confirm Delete" ก่อน */
   const onDeleteConfirm = async () => {
     if (!token || !id) return;
     setDeleting(true);
     try {
       await catalogApi.deleteProduct(token, id);
       refresh();
+      // ใช้ replace ไม่ใช่ back() เพราะสินค้าที่ฟอร์มนี้อ้างอิงถูกลบไปแล้ว
+      // ถ้า back() กลับมาหน้านี้อีกจะกลายเป็นฟอร์มที่ชี้ไปสินค้าที่ไม่มีอยู่
       router.replace('/admin/products');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'ลบสินค้าไม่สำเร็จ');
@@ -185,11 +245,20 @@ export default function AdminProductFormScreen() {
             keyboardType="decimal-pad"
           />
           <Field
-            label="รูปภาพ (1 บรรทัด = 1 URL)"
+            label="รูปภาพ (1 บรรทัด = 1 URL — หรือกดปุ่มด้านล่างเพื่อเลือกไฟล์)"
             value={imagesText}
             onChangeText={setImagesText}
             multiline
           />
+          <PressableScale
+            accessibilityRole="button"
+            style={[styles.uploadButton, uploading && styles.uploadButtonDisabled]}
+            onPress={onPickImage}
+            disabled={uploading}>
+            <Text style={styles.uploadButtonText}>
+              {uploading ? 'กำลังอัปโหลด...' : 'เลือกรูปจากเครื่อง'}
+            </Text>
+          </PressableScale>
           <Field
             label="คำอธิบาย"
             value={form.description}
@@ -366,6 +435,21 @@ const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   inputMultiline: {
     minHeight: 70,
     textAlignVertical: 'top',
+  },
+  uploadButton: {
+    backgroundColor: Brand.surface,
+    borderWidth: PixelBorder.thin,
+    borderColor: Brand.divider,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  uploadButtonDisabled: {
+    opacity: 0.6,
+  },
+  uploadButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Brand.text,
   },
   chipRow: {
     flexDirection: 'row',

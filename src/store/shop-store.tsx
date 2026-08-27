@@ -120,11 +120,20 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     };
   }, [isAuthenticated, token, getProductById]);
 
+  /**
+   * เพิ่มสินค้าลงตะกร้า — ใช้รูปแบบ "optimistic update" เหมือนกันทุกฟังก์ชันในไฟล์นี้:
+   *   1) เก็บ snapshot ของ state เดิมไว้ก่อน
+   *   2) อัปเดตหน้าจอทันที (ผู้ใช้ไม่ต้องรอ API)
+   *   3) ยิง API เบื้องหลัง — ถ้าพลาดค่อยย้อน state กลับเป็น snapshot + ขึ้น toast บอก
+   * ถ้ายังไม่ล็อกอิน (ไม่มี token) จะเก็บไว้ในเครื่องอย่างเดียว แล้ว merge เข้ากับ
+   * ตะกร้าบน server ตอนล็อกอินสำเร็จ (ดู effect ด้านบนของไฟล์)
+   */
   const addToCart = useCallback(
     (product: Product, quantity = 1) => {
       let snapshot: CartItem[] = [];
       setCart((prev) => {
         snapshot = prev;
+        // มีสินค้านี้อยู่แล้ว → บวกจำนวนเพิ่ม ไม่สร้างแถวใหม่ซ้ำ
         const existing = prev.find((item) => item.product.id === product.id);
         if (existing) {
           return prev.map((item) =>
@@ -223,6 +232,11 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     [token, showToast]
   );
 
+  /**
+   * เพิ่ม/เอาออกจากรายการโปรด — **ฟังก์ชันเดียวทำทั้งสองอย่าง** (สลับสถานะ)
+   * ฝั่ง server ก็เป็น endpoint เดียวเหมือนกัน: POST /api/favorites/:productId
+   * เก็บเป็น Set เพราะต้องเช็คบ่อยว่าสินค้านี้ถูกใจอยู่ไหม (เร็วกว่าใช้ array)
+   */
   const toggleFavorite = useCallback(
     (productId: string) => {
       let snapshot: Set<string> = new Set();

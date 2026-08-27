@@ -17,14 +17,18 @@ interface RequestOptions {
 }
 
 /**
- * Thin fetch wrapper for the Express API (see server/README.md). Attaches the
- * JWT when given, parses JSON, and throws ApiError with the server's Thai
- * message on failure so call sites can show it directly to the user.
+ * ตัวยิง HTTP กลางของทั้งแอป — **ทุก request ที่คุยกับ Express ผ่านฟังก์ชันนี้ที่เดียว**
+ * (ไฟล์ใน src/api/ ทุกตัวเรียกตัวนี้ ไม่มีใครเรียก fetch เองโดยตรง)
+ *
+ * รวมงานที่ต้องทำซ้ำทุกครั้งไว้จุดเดียว: ต่อ base URL, แนบ JWT, แปลง JSON,
+ * และโยน ApiError พร้อมข้อความไทยจาก server ให้หน้าจอเอาไปแสดงได้ทันที
  */
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, token } = options;
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  // แนบ JWT เฉพาะเมื่อมี — endpoint สาธารณะอย่าง /products ไม่ต้องใช้
+  // ฝั่ง server จะถอด token ตัวนี้ที่ middleware/auth.js แล้วได้ req.userId
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const res = await fetch(`${API_BASE_URL}${path}`, {
@@ -33,10 +37,14 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
+  // อ่านเป็น text ก่อนแล้วค่อย parse เอง — เพราะบาง response ไม่มี body เลย
+  // (เช่น DELETE ที่คืน 204) ถ้าเรียก res.json() ตรงๆ จะพังตรงนั้น
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
 
   if (!res.ok) {
+    // server ออกแบบให้ error ทุกตัวมีรูปแบบ { message } เหมือนกันหมด
+    // (ดู middleware/error.js) จึงหยิบมาใช้ต่อได้เลยโดยไม่ต้องแปลตาม status
     throw new ApiError(data?.message ?? 'เกิดข้อผิดพลาดในการเชื่อมต่อ', res.status);
   }
   return data as T;

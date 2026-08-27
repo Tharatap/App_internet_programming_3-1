@@ -14,7 +14,11 @@ import { useBrand } from '@/store/theme-store';
 import { Product } from '@/types/product';
 import { searchHistory } from '@/utils/search-history';
 
-/** Case-insensitive substring match against name/description/brand. */
+/**
+ * ตรรกะการจับคู่คำค้น — เทียบกับ ชื่อ / คำอธิบาย / แบรนด์ โดยไม่สนตัวพิมพ์เล็กใหญ่
+ * ใช้ `includes` (substring) ไม่ใช่การเทียบทั้งคำ เพราะภาษาไทยไม่มีเว้นวรรคระหว่างคำ
+ * จะตัดคำแล้วเทียบทีละคำไม่ได้
+ */
 function matches(product: Product, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return false;
@@ -25,6 +29,13 @@ function matches(product: Product, query: string): boolean {
   );
 }
 
+/**
+ * หน้าค้นหาสินค้า
+ *
+ * ค้นในเครื่องจากสินค้าที่ catalog-store โหลดมาแล้ว (ไม่ยิง API ทุกตัวอักษร)
+ * เพราะแคตตาล็อกมีแค่ 12 รายการ → ได้ผลลัพธ์ทันทีและใช้งานต่อได้แม้เน็ตหลุด
+ * หมายเหตุ: ฝั่ง server รองรับ `GET /api/products?q=` อยู่แล้ว ถ้าสินค้าเยอะขึ้นค่อยสลับไปใช้
+ */
 export default function SearchScreen() {
   const styles = useStyles(makeStyles);
   const Brand = useBrand();
@@ -33,24 +44,29 @@ export default function SearchScreen() {
   const { products } = useCatalog();
 
   const [query, setQuery] = useState('');
+  // ค่าที่หน่วงเวลาแล้ว — ใช้ตัวนี้กรอง ไม่ใช่ query ดิบ
   const [debounced, setDebounced] = useState('');
   const [recent, setRecent] = useState<string[]>([]);
 
+  // โหลดประวัติการค้นหาที่เก็บไว้ในเครื่อง (ล้างได้จากหน้าตั้งค่า → "ล้างแคช")
   useEffect(() => {
     searchHistory.list().then(setRecent);
   }, []);
 
-  // Debounce so we don't re-filter on every keystroke.
+  // หน่วงเวลา 300ms — ไม่ให้กรองใหม่ทุกครั้งที่กดแป้นพิมพ์
+  // cleanup ด้วย clearTimeout ทำให้ตัวจับเวลาเดิมถูกยกเลิกเมื่อพิมพ์ตัวถัดไป
   useEffect(() => {
     const t = setTimeout(() => setDebounced(query), 300);
     return () => clearTimeout(t);
   }, [query]);
 
+  // useMemo กันไม่ให้กรองใหม่ตอน re-render ที่ไม่เกี่ยวข้อง (เช่นเปลี่ยนธีม)
   const results = useMemo(
     () => (debounced.trim() ? products.filter((p) => matches(p, debounced)) : []),
     [products, debounced]
   );
 
+  /** ค้นหาจริง + บันทึกคำค้นลงประวัติ (เรียกตอนกด Enter หรือกดชิปประวัติ) */
   const runSearch = async (term: string) => {
     setQuery(term);
     const next = await searchHistory.add(term);

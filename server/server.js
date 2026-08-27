@@ -2,15 +2,18 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const { errorHandler } = require('./middleware/error');
 
 const app = express();
 
 app.use(cors()); // ขาดไม่ได้ — Expo web เรียกข้ามโดเมน
-app.use(express.json());
+app.use(express.json({ limit: '6mb' }));
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/products'));
@@ -22,6 +25,7 @@ app.use('/api/orders', require('./routes/orders'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/coupons', require('./routes/coupons'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/uploads', require('./routes/uploads'));
 
 app.use((req, res) => res.status(404).json({ message: 'ไม่พบ endpoint นี้' }));
 app.use(errorHandler);

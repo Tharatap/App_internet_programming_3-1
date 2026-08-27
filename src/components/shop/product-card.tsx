@@ -27,7 +27,7 @@ export function ProductCard({ product, variant = 'grid', index = 0 }: Props) {
 
   if (variant === 'row') {
     return (
-      <Animated.View entering={entering}>
+      <Animated.View entering={entering} style={styles.rowWrapper}>
         <PressableScale
           accessibilityLabel={`เปิดรายละเอียด ${product.name}`}
           onPress={open}
@@ -50,10 +50,10 @@ export function ProductCard({ product, variant = 'grid', index = 0 }: Props) {
             </View>
             <PriceRow product={product} />
           </View>
-          <View style={styles.rowHeart}>
-            <HeartButton productId={product.id} size={18} />
-          </View>
         </PressableScale>
+        <View style={styles.rowHeart}>
+          <HeartButton productId={product.id} size={18} />
+        </View>
       </Animated.View>
     );
   }
@@ -71,9 +71,6 @@ export function ProductCard({ product, variant = 'grid', index = 0 }: Props) {
             style={styles.gridImage}
             borderRadius={Radius.md}
           />
-          <View style={styles.gridHeart}>
-            <HeartButton productId={product.id} size={18} />
-          </View>
           {!product.inStock ? (
             <View style={styles.outOfStock}>
               <Badge label="สินค้าหมด" tone="danger" />
@@ -85,6 +82,9 @@ export function ProductCard({ product, variant = 'grid', index = 0 }: Props) {
         </Text>
         <PriceRow product={product} />
       </PressableScale>
+      <View style={styles.gridHeart}>
+        <HeartButton productId={product.id} size={18} />
+      </View>
     </Animated.View>
   );
 }
@@ -147,8 +147,8 @@ const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   },
   gridHeart: {
     position: 'absolute',
-    top: 6,
-    right: 6,
+    top: 16,
+    right: 19,
   },
   outOfStock: {
     position: 'absolute',
@@ -156,12 +156,14 @@ const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
     left: 6,
   },
   // Row
+  rowWrapper: {},
   rowCard: {
     flexDirection: 'row',
     backgroundColor: Brand.surface,
     borderWidth: PixelBorder.base,
     borderColor: Brand.divider,
     padding: 12,
+    paddingRight: 46,
     gap: 12,
     alignItems: 'center',
   },
@@ -174,6 +176,8 @@ const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
     gap: 6,
   },
   rowHeart: {
-    alignSelf: 'flex-start',
+    position: 'absolute',
+    top: 12,
+    right: 15,
   },
 });

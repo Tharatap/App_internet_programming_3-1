@@ -19,6 +19,12 @@ import { useBrand } from '@/store/theme-store';
 import { Product } from '@/types/product';
 import { formatBaht } from '@/utils/format';
 
+/**
+ * หน้ารายการสินค้าสำหรับแอดมิน — ดู / กดเพื่อแก้ไข / ลบ
+ *
+ * กันการเข้าถึงด้วย AdminGuard (เช็ค isAdminSession) และ endpoint ที่เรียกถูกกันด้วย
+ * adminOnly ฝั่ง server อีกชั้น → ซ่อนปุ่มอย่างเดียวไม่พอ ต้องกันที่ API ด้วยเสมอ
+ */
 export default function AdminProductsScreen() {
   const styles = useStyles(makeStyles);
   const Brand = useBrand();
@@ -28,17 +34,21 @@ export default function AdminProductsScreen() {
   const { showToast } = useToast();
   const { products, categories, refresh } = useCatalog();
 
+  // เก็บสินค้าที่กำลังจะลบไว้ — ค่าไม่ null เมื่อไหร่ = เปิด modal ยืนยัน
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  /** แปลง categoryId เป็นชื่อหมวดภาษาไทย (ถ้าหาไม่เจอให้โชว์ id ไปก่อน) */
   const categoryName = (categoryId: string) =>
     categories.find((c) => c.id === categoryId)?.name ?? categoryId;
 
+  /** ลบสินค้า — เรียกจาก DeleteConfirmModal หลังผู้ใช้พิมพ์ "Confirm Delete" ยืนยันแล้ว */
   const onDeleteConfirm = async () => {
     if (!token || !deleteTarget) return;
     setDeleting(true);
     try {
       await catalogApi.deleteProduct(token, deleteTarget.id);
+      // โหลดสินค้าใหม่ทั้งชุด ให้ทุกหน้าในแอปเห็นตรงกัน
       refresh();
       setDeleteTarget(null);
     } catch (err) {

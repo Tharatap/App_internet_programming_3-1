@@ -21,6 +21,12 @@ import { useBrand } from '@/store/theme-store';
 import { Product } from '@/types/product';
 import { formatCountdown } from '@/utils/format';
 
+/**
+ * หน้าแรก (แท็บที่ 1)
+ *
+ * ประกอบด้วย: หัวข้อที่อยู่จัดส่ง · แถบค้นหา · แบนเนอร์ · หมวดหมู่ · Flash Sale · สินค้าแนะนำ
+ * สินค้ามาจาก catalog-store (API → GitHub → ไฟล์ในแอป) ส่วนที่อยู่/แจ้งเตือนยิง API ตรง
+ */
 export default function HomeScreen() {
   const styles = useStyles(makeStyles);
   const Brand = useBrand();
@@ -36,29 +42,40 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const refreshStarted = useRef(false);
 
+  /** โหลดข้อมูลส่วนหัว: ที่อยู่จัดส่ง + จุดแดงแจ้งเตือน (เฉพาะตอนล็อกอินแล้ว) */
   const loadHeaderData = useCallback(async () => {
     if (!token) {
       setHasUnread(false);
       setDeliveryAddress('ยังไม่ได้ตั้งที่อยู่จัดส่ง');
       return;
     }
+    // ยิง 2 API พร้อมกัน และใส่ .catch แยกในแต่ละตัว
+    // → ถ้าตัวใดตัวหนึ่งล้ม อีกตัวยังทำงานต่อได้ (ถ้า catch รวมทีเดียวจะพังทั้งคู่)
     const [notifications, addresses] = await Promise.all([
       notificationsApi.list(token).catch(() => []),
       addressesApi.list(token).catch(() => []),
     ]);
+    // ถ้าผู้ใช้ปิดแจ้งเตือนโปรโมชันไว้ ไม่ต้องนับ notification ประเภท promo เป็นของที่ยังไม่อ่าน
     setHasUnread(notifications.some(
       (notification) => !notification.isRead && (notifyPromo || notification.type !== 'promo')
     ));
+    // ใช้ที่อยู่ที่ตั้งเป็นค่าเริ่มต้น ถ้าไม่มีก็เอาที่อยู่แรกในลิสต์
     const address = addresses.find((item) => item.isDefault) ?? addresses[0];
     setDeliveryAddress(address?.line1 ?? 'ยังไม่ได้ตั้งที่อยู่จัดส่ง');
   }, [notifyPromo, token]);
 
+  // useFocusEffect (ไม่ใช่ useEffect) → โหลดใหม่ทุกครั้งที่กลับเข้าหน้านี้
+  // เช่นไปเพิ่มที่อยู่มาแล้วกดย้อนกลับ ที่อยู่บนหัวจะอัปเดตทันที
   useFocusEffect(
     useCallback(() => {
       void loadHeaderData();
     }, [loadHeaderData])
   );
 
+  // ปิดสปินเนอร์ pull-to-refresh เมื่อ catalog-store โหลดเสร็จ
+  // ต้องรอให้เห็น loading = true ก่อน (refreshStarted) แล้วค่อยรอให้กลับเป็น false
+  // ไม่งั้นสปินเนอร์จะแวบหายทันทีทั้งที่ยังโหลดไม่เสร็จ
+  // (refresh() ของ catalog-store ไม่คืน Promise จึง await ไม่ได้)
   useEffect(() => {
     if (!refreshing) return;
     if (loading) {
@@ -69,6 +86,7 @@ export default function HomeScreen() {
     }
   }, [loading, refreshing]);
 
+  /** ลากลงเพื่อรีเฟรช — โหลดทั้งสินค้าและข้อมูลส่วนหัวใหม่ */
   const onRefresh = useCallback(() => {
     refreshStarted.current = false;
     setRefreshing(true);
