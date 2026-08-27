@@ -1,15 +1,17 @@
 import { useFocusEffect } from 'expo-router';
 import { Bell, Package, Tag } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { notificationsApi } from '@/api/notifications';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
+import { useBrand } from '@/store/theme-store';
 import { AppNotification } from '@/types/shop';
 
 function iconFor(type: string) {
@@ -19,24 +21,39 @@ function iconFor(type: string) {
 }
 
 export default function NotificationsScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const insets = useSafeAreaInsets();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [items, setItems] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const notifyPromo = user?.settings.notifyPromo ?? true;
+  const visibleItems = notifyPromo ? items : items.filter((item) => item.type !== 'promo');
+  const promoFilteredToEmpty = !notifyPromo && items.length > 0 && visibleItems.length === 0;
 
-  const load = useCallback(() => {
+  const load = useCallback(async () => {
     if (!token) return;
-    notificationsApi
-      .list(token)
-      .then(setItems)
-      .finally(() => setLoading(false));
+    const nextItems = await notificationsApi.list(token);
+    setItems(nextItems);
   }, [token]);
 
   useFocusEffect(
     useCallback(() => {
-      load();
+      void load().catch(() => {}).finally(() => setLoading(false));
     }, [load])
   );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await load();
+    } catch {
+      // Keep the last successful list when the refresh request fails.
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const onPressItem = async (item: AppNotification) => {
     if (!token || item.isRead) return;
@@ -49,12 +66,14 @@ export default function NotificationsScreen() {
       <TopBar variant="list" title="การแจ้งเตือน" showBack />
       <RequireAuth title="การแจ้งเตือน">
         <FlatList
-          data={items}
+          data={visibleItems}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => {
             const Icon = iconFor(item.type);
             return (
               <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel={`อ่านการแจ้งเตือน ${item.title}`}
                 style={[styles.card, !item.isRead && styles.cardUnread]}
                 onPress={() => onPressItem(item)}>
                 <View style={styles.iconWrapper}>
@@ -76,11 +95,23 @@ export default function NotificationsScreen() {
           ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
           contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={Brand.text}
+              colors={[Brand.text]}
+            />
+          }
           ListEmptyComponent={
             !loading ? (
               <View style={styles.empty}>
                 <Bell size={32} color={Brand.textSecondary} strokeWidth={2} />
-                <Text style={styles.emptyText}>ยังไม่มีการแจ้งเตือน</Text>
+                <Text style={styles.emptyText}>
+                  {promoFilteredToEmpty
+                    ? 'ปิดการแจ้งเตือนโปรโมชันอยู่ — เปิดได้ในหน้าตั้งค่า'
+                    : 'ยังไม่มีการแจ้งเตือน'}
+                </Text>
               </View>
             ) : null
           }
@@ -90,7 +121,7 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

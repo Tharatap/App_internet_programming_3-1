@@ -11,6 +11,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
+import { useEffect } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -18,10 +19,12 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { OfflineBanner } from '@/components/shop/offline-banner';
 import { ToastProvider } from '@/components/shop/toast';
-import { AppFrameWidth, Brand } from '@/constants/theme';
-import { AuthProvider } from '@/store/auth-store';
+import { AppFrameWidth, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
+import { AuthProvider, useAuth } from '@/store/auth-store';
 import { CatalogProvider } from '@/store/catalog-store';
 import { ShopProvider } from '@/store/shop-store';
+import { ThemeProvider, useBrand, useThemeMode } from '@/store/theme-store';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -45,13 +48,28 @@ export default function RootLayout() {
   }
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <ThemedRootLayout />
+      </ThemeProvider>
+    </GestureHandlerRootView>
+  );
+}
+
+function ThemedRootLayout() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
+  const { resolved } = useThemeMode();
+
+  return (
     <ErrorBoundary>
-      <GestureHandlerRootView style={styles.root}>
+      <View style={styles.root}>
         <AuthProvider>
+          <ThemeSync />
           <CatalogProvider>
             <ToastProvider>
               <ShopProvider>
-                <StatusBar style="dark" />
+                <StatusBar style={resolved === 'dark' ? 'light' : 'dark'} />
                 {/* On web, constrain the app to a centered phone-width column. */}
                 <View style={styles.frame}>
                   <OfflineBanner />
@@ -82,16 +100,29 @@ export default function RootLayout() {
             </ToastProvider>
           </CatalogProvider>
         </AuthProvider>
-      </GestureHandlerRootView>
+      </View>
     </ErrorBoundary>
   );
 }
 
-const styles = StyleSheet.create({
+function ThemeSync() {
+  const { user } = useAuth();
+  const { setMode } = useThemeMode();
+
+  useEffect(() => {
+    if (user?.settings.theme) {
+      setMode(user.settings.theme);
+    }
+  }, [setMode, user?.settings.theme]);
+
+  return null;
+}
+
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   root: {
     flex: 1,
     // Grey backdrop behind the centered app frame on wide web screens.
-    backgroundColor: Platform.OS === 'web' ? '#E9E9EC' : Brand.background,
+    backgroundColor: Platform.OS === 'web' ? Brand.webBackdrop : Brand.background,
     alignItems: 'center',
   },
   frame: {

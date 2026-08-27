@@ -6,7 +6,8 @@ import { Badge } from '@/components/shop/badge';
 import { HeartButton } from '@/components/shop/heart-button';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
-import { Brand, PixelBorder, PixelFonts, PixelShadow, Radius } from '@/constants/theme';
+import { PixelBorder, PixelFonts, PixelShadow, Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { Product } from '@/types/product';
 import { formatBaht } from '@/utils/format';
 
@@ -19,6 +20,7 @@ interface Props {
 
 /** Reusable product card. `grid` = tall 2-column card, `row` = horizontal list. */
 export function ProductCard({ product, variant = 'grid', index = 0 }: Props) {
+  const styles = useStyles(makeStyles);
   const router = useRouter();
   const open = () => router.push(`/product/${product.id}`);
   const entering = FadeInDown.duration(300).delay(Math.min(index, 8) * 60);
@@ -27,6 +29,7 @@ export function ProductCard({ product, variant = 'grid', index = 0 }: Props) {
     return (
       <Animated.View entering={entering}>
         <PressableScale
+          accessibilityLabel={`เปิดรายละเอียด ${product.name}`}
           onPress={open}
           pixelShadow={PixelShadow.sm}
           style={[styles.rowCard, !product.inStock && styles.dimmed]}>
@@ -58,6 +61,7 @@ export function ProductCard({ product, variant = 'grid', index = 0 }: Props) {
   return (
     <Animated.View entering={entering} style={styles.gridWrapper}>
       <PressableScale
+        accessibilityLabel={`เปิดรายละเอียด ${product.name}`}
         onPress={open}
         pixelShadow={PixelShadow.sm}
         style={[styles.gridCard, !product.inStock && styles.dimmed]}>
@@ -86,6 +90,8 @@ export function ProductCard({ product, variant = 'grid', index = 0 }: Props) {
 }
 
 function PriceRow({ product }: { product: Product }) {
+  const styles = useStyles(makeStyles);
+
   return (
     <View style={styles.priceRow}>
       <Text style={styles.price}>{formatBaht(product.price)}</Text>
@@ -96,7 +102,7 @@ function PriceRow({ product }: { product: Product }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   dimmed: { opacity: 0.55 },
   name: {
     fontSize: 13,

@@ -7,8 +7,9 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Brand, PixelBorder } from '@/constants/theme';
+import { PixelBorder } from '@/constants/theme';
 import { useShop } from '@/store/shop-store';
+import { useBrand } from '@/store/theme-store';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -21,6 +22,7 @@ interface Props {
 
 /** Wishlist toggle with a micro-bounce animation and color change. */
 export function HeartButton({ productId, size = 22, withBackground = true }: Props) {
+  const Brand = useBrand();
   const { isFavorite, toggleFavorite } = useShop();
   const active = isFavorite(productId);
   const scale = useSharedValue(1);
@@ -52,7 +54,7 @@ export function HeartButton({ productId, size = 22, withBackground = true }: Pro
           height: dimension,
           borderWidth: PixelBorder.base,
           borderColor: Brand.divider,
-          backgroundColor: active ? Brand.favoriteBg : 'rgba(255,253,245,0.9)',
+          backgroundColor: active ? Brand.favoriteBg : Brand.floatingSurface,
           alignItems: 'center',
           justifyContent: 'center',
         },

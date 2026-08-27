@@ -6,10 +6,12 @@ import { CategoryIcon } from '@/components/shop/category-icon';
 import { ProductCard } from '@/components/shop/product-card';
 import { SectionHeader } from '@/components/shop/section-header';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand } from '@/constants/theme';
+import type { BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useCatalog } from '@/store/catalog-store';
 
 export default function CatalogScreen() {
+  const styles = useStyles(makeStyles);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { products, categories } = useCatalog();
@@ -49,7 +51,7 @@ export default function CatalogScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

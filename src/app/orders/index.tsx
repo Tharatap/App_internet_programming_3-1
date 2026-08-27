@@ -1,7 +1,7 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Package } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ordersApi } from '@/api/orders';
@@ -9,8 +9,10 @@ import { Badge } from '@/components/shop/badge';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
+import { useBrand } from '@/store/theme-store';
 import { Order, OrderStatus } from '@/types/shop';
 import { formatBaht } from '@/utils/format';
 
@@ -31,21 +33,37 @@ const STATUS_TONE: Record<OrderStatus, 'neutral' | 'accent' | 'success' | 'dange
 };
 
 export default function OrdersScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!token) return;
+    const nextOrders = await ordersApi.list(token);
+    setOrders(nextOrders);
+  }, [token]);
 
   useFocusEffect(
     useCallback(() => {
-      if (!token) return;
-      ordersApi
-        .list(token)
-        .then(setOrders)
-        .finally(() => setLoading(false));
-    }, [token])
+      void load().catch(() => {}).finally(() => setLoading(false));
+    }, [load])
   );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await load();
+    } catch {
+      // Keep the last successful list when the refresh request fails.
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   return (
     <View style={styles.screen}>
@@ -56,6 +74,8 @@ export default function OrdersScreen() {
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
             <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel={`เปิดคำสั่งซื้อ ${item.orderNumber}`}
               style={styles.card}
               onPress={() => router.push(`/orders/${item.id}`)}>
               <View style={styles.cardHeader}>
@@ -69,6 +89,14 @@ export default function OrdersScreen() {
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={Brand.text}
+              colors={[Brand.text]}
+            />
+          }
           ListEmptyComponent={
             !loading ? (
               <View style={styles.empty}>
@@ -83,7 +111,7 @@ export default function OrdersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

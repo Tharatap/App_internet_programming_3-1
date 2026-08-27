@@ -12,7 +12,9 @@ import {
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/shop/pressable-scale';
-import { Brand, CategoryPalette, PixelBorder, PixelFonts, PixelShadow } from '@/constants/theme';
+import { CategoryPalette, PixelBorder, PixelFonts, PixelShadow, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
+import { useBrand } from '@/store/theme-store';
 import { CategoryIconName } from '@/types/product';
 
 const iconMap: Record<CategoryIconName, LucideIcon> = {
@@ -36,6 +38,8 @@ interface Props {
 
 /** Square pixel-bordered category tile with an icon and a caption below it. */
 export function CategoryIcon({ name, label, onPress, paletteIndex = 0 }: Props) {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const Icon = iconMap[name];
   const backgroundColor = CategoryPalette[paletteIndex % CategoryPalette.length];
 
@@ -46,7 +50,7 @@ export function CategoryIcon({ name, label, onPress, paletteIndex = 0 }: Props) 
       pixelShadow={PixelShadow.sm}
       accessibilityLabel={label}>
       <View style={[styles.tile, { backgroundColor }]}>
-        <Icon size={22} color={Brand.text} strokeWidth={2} />
+        <Icon size={22} color={Brand.onPastel} strokeWidth={2} />
       </View>
       <Text style={styles.label} numberOfLines={1}>
         {label}
@@ -55,11 +59,13 @@ export function CategoryIcon({ name, label, onPress, paletteIndex = 0 }: Props) 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   wrapper: {
     alignItems: 'center',
     width: 60,
     gap: 6,
+    backgroundColor: Brand.surface,
+    paddingBottom: 6,
   },
   tile: {
     width: 52,
@@ -72,7 +78,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 11,
     fontFamily: PixelFonts.headingSemiBold,
-    color: Brand.textSecondary,
+    color: Brand.text,
     textAlign: 'center',
   },
 });

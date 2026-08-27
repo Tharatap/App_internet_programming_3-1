@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProductCard } from '@/components/shop/product-card';
@@ -11,8 +11,10 @@ import {
   FilterSheet,
   FilterValue,
 } from '@/components/shop/filter-sheet';
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useCatalog } from '@/store/catalog-store';
+import { useBrand } from '@/store/theme-store';
 import { Product } from '@/types/product';
 
 const FILTERS = ['แนะนำ', 'ราคาต่ำ-สูง', 'ยี่ห้อ', 'ประหยัดไฟ'] as const;
@@ -27,12 +29,32 @@ const PRICE_BOUNDS: Record<FilterValue['priceRange'], [number, number]> = {
 };
 
 export default function ProductListScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const { category, title } = useLocalSearchParams<{ category?: string; title?: string }>();
   const insets = useSafeAreaInsets();
   const [active, setActive] = useState<Filter>('แนะนำ');
   const [filterVisible, setFilterVisible] = useState(false);
   const [filter, setFilter] = useState<FilterValue>(defaultFilterValue);
-  const { products: allProducts, getProductsByCategory } = useCatalog();
+  const [refreshing, setRefreshing] = useState(false);
+  const refreshStarted = useRef(false);
+  const { products: allProducts, getProductsByCategory, loading, refresh } = useCatalog();
+
+  useEffect(() => {
+    if (!refreshing) return;
+    if (loading) {
+      refreshStarted.current = true;
+    } else if (refreshStarted.current) {
+      refreshStarted.current = false;
+      setRefreshing(false);
+    }
+  }, [loading, refreshing]);
+
+  const onRefresh = () => {
+    refreshStarted.current = false;
+    setRefreshing(true);
+    refresh();
+  };
 
   const categoryProducts = useMemo(
     () => (category ? getProductsByCategory(category) : allProducts),
@@ -99,6 +121,8 @@ export default function ProductListScreen() {
             const selected = filterOption === active;
             return (
               <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel={`เรียงสินค้าตาม ${filterOption}`}
                 key={filterOption}
                 onPress={() => setActive(filterOption)}
                 style={[styles.chip, selected && styles.chipSelected]}>
@@ -109,6 +133,8 @@ export default function ProductListScreen() {
             );
           })}
           <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel="เปิดตัวกรองสินค้า"
             onPress={() => setFilterVisible(true)}
             style={[styles.chip, activeFilterCount > 0 && styles.chipSelected]}>
             <Text
@@ -128,6 +154,14 @@ export default function ProductListScreen() {
         contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 24 }]}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Brand.text}
+            colors={[Brand.text]}
+          />
+        }
         ListEmptyComponent={
           <Text style={styles.empty}>ไม่พบสินค้าที่ตรงกับตัวกรอง</Text>
         }
@@ -145,7 +179,7 @@ export default function ProductListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

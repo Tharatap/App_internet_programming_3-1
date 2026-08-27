@@ -8,11 +8,15 @@ import { PressableScale } from '@/components/shop/pressable-scale';
 import { ProductCard } from '@/components/shop/product-card';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useCatalog } from '@/store/catalog-store';
 import { useShop } from '@/store/shop-store';
+import { useBrand } from '@/store/theme-store';
 
 export default function FavoritesScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { favorites } = useShop();
@@ -36,6 +40,7 @@ export default function FavoritesScreen() {
             <Text style={styles.emptyTitle}>ยังไม่มีรายการโปรด</Text>
             <Text style={styles.emptySub}>กดหัวใจที่สินค้าเพื่อบันทึกไว้ที่นี่</Text>
             <PressableScale
+              accessibilityRole="button"
               style={styles.browseButton}
               onPress={() => router.push('/(tabs)')}>
               <Text style={styles.browseText}>เลือกซื้อสินค้า</Text>
@@ -57,7 +62,7 @@ export default function FavoritesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

@@ -11,11 +11,15 @@ import { RequireAuth } from '@/components/shop/require-auth';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { TopBar } from '@/components/shop/top-bar';
 import { useToast } from '@/components/shop/toast';
-import { Brand, PixelBorder, PixelFonts, PixelShadow, Radius } from '@/constants/theme';
+import { PixelBorder, PixelFonts, PixelShadow, Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useShop } from '@/store/shop-store';
+import { useBrand } from '@/store/theme-store';
 import { formatBaht } from '@/utils/format';
 
 export default function CartScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { showToast } = useToast();
@@ -47,7 +51,11 @@ export default function CartScreen() {
         contentContainerStyle={styles.content}>
         {/* Delivery address */}
         <PixelPanel shadowOffset={PixelShadow.sm} style={styles.address}>
-          <PressableScale style={styles.addressInner} onPress={() => router.push('/addresses')}>
+          <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel="เปิดหน้าที่อยู่จัดส่ง"
+            style={styles.addressInner}
+            onPress={() => router.push('/addresses')}>
             <MapPin size={18} color={Brand.text} strokeWidth={2} />
             <View style={styles.addressBody}>
               <Text style={styles.addressLabel}>จัดส่งไปที่</Text>
@@ -65,6 +73,7 @@ export default function CartScreen() {
           <>
             {/* Select all */}
             <PressableScale
+              accessibilityRole="button"
               style={styles.selectAll}
               onPress={() => setAllSelected(!allSelected)}>
               <Checkbox
@@ -116,6 +125,8 @@ export default function CartScreen() {
             <Text style={styles.totalValue}>{formatBaht(selectedTotal)}</Text>
           </View>
           <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel="ดำเนินการชำระเงิน"
             style={styles.checkoutButton}
             pixelShadow={PixelShadow.sm}
             onPress={onCheckout}>
@@ -128,7 +139,7 @@ export default function CartScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

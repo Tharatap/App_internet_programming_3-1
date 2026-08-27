@@ -2,7 +2,9 @@ import { ChevronRight } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Badge } from '@/components/shop/badge';
-import { Brand, PixelFonts } from '@/constants/theme';
+import { PixelFonts, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
+import { useBrand } from '@/store/theme-store';
 
 interface Props {
   title: string;
@@ -14,6 +16,9 @@ interface Props {
 
 /** Section title row with an optional "see all" link on the right. */
 export function SectionHeader({ title, badge, onSeeAll, seeAllLabel = 'ดูทั้งหมด' }: Props) {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
+
   return (
     <View style={styles.row}>
       <View style={styles.left}>
@@ -30,7 +35,7 @@ export function SectionHeader({ title, badge, onSeeAll, seeAllLabel = 'ดูท
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',

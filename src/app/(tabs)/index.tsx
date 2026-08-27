@@ -1,7 +1,7 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Leaf, Search } from 'lucide-react-native';
-import { useCallback, useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { addressesApi } from '@/api/addresses';
@@ -12,40 +12,69 @@ import { PressableScale } from '@/components/shop/pressable-scale';
 import { ProductCard } from '@/components/shop/product-card';
 import { SectionHeader } from '@/components/shop/section-header';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, PixelBorder, PixelFonts, PixelShadow, Radius } from '@/constants/theme';
+import { PixelBorder, PixelFonts, PixelShadow, Radius, type BrandPalette } from '@/constants/theme';
 import { useCountdown } from '@/hooks/use-countdown';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
 import { useCatalog } from '@/store/catalog-store';
+import { useBrand } from '@/store/theme-store';
 import { Product } from '@/types/product';
 import { formatCountdown } from '@/utils/format';
 
 export default function HomeScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   // TODO(fake-data): ค่าตกแต่งชั่วคราวจนกว่า backend จะมีเวลาจบ Flash Sale
   const countdown = useCountdown(3 * 3600 + 23);
-  const { categories, flashSaleProducts, recommendedProducts } = useCatalog();
-  const { token } = useAuth();
+  const { categories, flashSaleProducts, recommendedProducts, loading, refresh } = useCatalog();
+  const { token, user } = useAuth();
+  const notifyPromo = user?.settings.notifyPromo ?? true;
   const [hasUnread, setHasUnread] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState('ยังไม่ได้ตั้งที่อยู่จัดส่ง');
+  const [refreshing, setRefreshing] = useState(false);
+  const refreshStarted = useRef(false);
+
+  const loadHeaderData = useCallback(async () => {
+    if (!token) {
+      setHasUnread(false);
+      setDeliveryAddress('ยังไม่ได้ตั้งที่อยู่จัดส่ง');
+      return;
+    }
+    const [notifications, addresses] = await Promise.all([
+      notificationsApi.list(token).catch(() => []),
+      addressesApi.list(token).catch(() => []),
+    ]);
+    setHasUnread(notifications.some(
+      (notification) => !notification.isRead && (notifyPromo || notification.type !== 'promo')
+    ));
+    const address = addresses.find((item) => item.isDefault) ?? addresses[0];
+    setDeliveryAddress(address?.line1 ?? 'ยังไม่ได้ตั้งที่อยู่จัดส่ง');
+  }, [notifyPromo, token]);
 
   useFocusEffect(
     useCallback(() => {
-      if (!token) {
-        setHasUnread(false);
-        setDeliveryAddress('ยังไม่ได้ตั้งที่อยู่จัดส่ง');
-        return;
-      }
-      Promise.all([
-        notificationsApi.list(token).catch(() => []),
-        addressesApi.list(token).catch(() => []),
-      ]).then(([notifications, addresses]) => {
-        setHasUnread(notifications.some((notification) => !notification.isRead));
-        const address = addresses.find((item) => item.isDefault) ?? addresses[0];
-        setDeliveryAddress(address?.line1 ?? 'ยังไม่ได้ตั้งที่อยู่จัดส่ง');
-      });
-    }, [token])
+      void loadHeaderData();
+    }, [loadHeaderData])
   );
+
+  useEffect(() => {
+    if (!refreshing) return;
+    if (loading) {
+      refreshStarted.current = true;
+    } else if (refreshStarted.current) {
+      refreshStarted.current = false;
+      setRefreshing(false);
+    }
+  }, [loading, refreshing]);
+
+  const onRefresh = useCallback(() => {
+    refreshStarted.current = false;
+    setRefreshing(true);
+    refresh();
+    void loadHeaderData();
+  }, [loadHeaderData, refresh]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: Product; index: number }) => (
@@ -73,10 +102,20 @@ export default function HomeScreen() {
         columnWrapperStyle={styles.column}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Brand.text}
+            colors={[Brand.text]}
+          />
+        }
         ListHeaderComponent={
           <View style={styles.header}>
             {/* Search bar */}
             <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel="ค้นหาสินค้า"
               style={styles.search}
               pixelShadow={PixelShadow.sm}
               onPress={() => router.push('/search')}>
@@ -156,7 +195,7 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

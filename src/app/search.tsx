@@ -7,8 +7,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { IconButton } from '@/components/shop/icon-button';
 import { ProductCard } from '@/components/shop/product-card';
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useCatalog } from '@/store/catalog-store';
+import { useBrand } from '@/store/theme-store';
 import { Product } from '@/types/product';
 import { searchHistory } from '@/utils/search-history';
 
@@ -24,6 +26,8 @@ function matches(product: Product, query: string): boolean {
 }
 
 export default function SearchScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { products } = useCatalog();
@@ -119,7 +123,7 @@ export default function SearchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

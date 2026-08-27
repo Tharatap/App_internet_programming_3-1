@@ -8,11 +8,13 @@ import { AddressCard } from '@/components/shop/address-card';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, PixelBorder, PixelFonts, PixelShadow } from '@/constants/theme';
+import { PixelBorder, PixelFonts, PixelShadow, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
 import { Address } from '@/types/shop';
 
 export default function CheckoutAddressScreen() {
+  const styles = useStyles(makeStyles);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
@@ -56,11 +58,13 @@ export default function CheckoutAddressScreen() {
 
         <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
           <PressableScale
+            accessibilityRole="button"
             style={styles.secondaryButton}
             onPress={() => router.push('/addresses/edit')}>
             <Text style={styles.secondaryText}>+ เพิ่มที่อยู่ใหม่</Text>
           </PressableScale>
           <PressableScale
+            accessibilityRole="button"
             style={[styles.primaryButton, !selectedId && styles.primaryButtonDisabled]}
             pixelShadow={selectedId ? PixelShadow.sm : undefined}
             disabled={!selectedId}
@@ -73,7 +77,7 @@ export default function CheckoutAddressScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

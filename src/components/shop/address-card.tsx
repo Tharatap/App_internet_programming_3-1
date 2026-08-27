@@ -3,7 +3,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Badge } from '@/components/shop/badge';
 import { PressableScale } from '@/components/shop/pressable-scale';
-import { Brand, PixelBorder, PixelFonts, PixelShadow } from '@/constants/theme';
+import { PixelBorder, PixelFonts, PixelShadow, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
+import { useBrand } from '@/store/theme-store';
 import { Address } from '@/types/shop';
 
 interface Props {
@@ -17,8 +19,13 @@ interface Props {
 
 /** Reusable address summary card — used in checkout selection and address management. */
 export function AddressCard({ address, selected, onPress, onEdit, onDelete }: Props) {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
+
   return (
     <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={onPress ? `เลือกที่อยู่ ${address.label}` : `รายละเอียดที่อยู่ ${address.label}`}
       style={[styles.card, selected && styles.cardSelected]}
       pixelShadow={onPress ? PixelShadow.sm : undefined}
       onPress={onPress}
@@ -58,7 +65,7 @@ export function AddressCard({ address, selected, onPress, onEdit, onDelete }: Pr
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   card: {
     backgroundColor: Brand.surface,
     padding: 16,
@@ -67,7 +74,7 @@ const styles = StyleSheet.create({
     borderColor: Brand.divider,
   },
   cardSelected: {
-    backgroundColor: '#EAF6E1',
+    backgroundColor: Brand.selectedBg,
   },
   headerRow: {
     flexDirection: 'row',

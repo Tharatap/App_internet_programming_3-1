@@ -1,8 +1,10 @@
 import { Stack } from 'expo-router';
 
-import { Brand } from '@/constants/theme';
+import { useBrand } from '@/store/theme-store';
 
 export default function CheckoutLayout() {
+  const Brand = useBrand();
+
   return (
     <Stack
       screenOptions={{

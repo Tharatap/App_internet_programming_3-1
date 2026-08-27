@@ -8,8 +8,10 @@ import { couponsApi } from '@/api/coupons';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, PixelBorder, Radius } from '@/constants/theme';
+import { PixelBorder, Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
+import { useBrand } from '@/store/theme-store';
 import { Coupon } from '@/types/shop';
 import { formatBaht } from '@/utils/format';
 
@@ -20,6 +22,8 @@ function discountLabel(coupon: Coupon): string {
 }
 
 export default function CouponsScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { token } = useAuth();
@@ -57,7 +61,11 @@ export default function CouponsScreen() {
           data={coupons}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
-            <PressableScale style={styles.card} onPress={() => onSelect(item)}>
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel={pickerMode ? `เลือกใช้คูปอง ${item.title}` : `ดูคูปอง ${item.title}`}
+              style={styles.card}
+              onPress={() => onSelect(item)}>
               <View style={styles.codeBadge}>
                 <Text style={styles.codeText}>{item.code}</Text>
               </View>
@@ -80,7 +88,10 @@ export default function CouponsScreen() {
           )}
           ListHeaderComponent={
             pickerMode ? (
-              <PressableScale style={styles.noCouponRow} onPress={() => onSelect(null)}>
+              <PressableScale
+                accessibilityRole="button"
+                style={styles.noCouponRow}
+                onPress={() => onSelect(null)}>
                 <Text style={styles.noCouponText}>ไม่ใช้คูปอง</Text>
               </PressableScale>
             ) : null
@@ -102,7 +113,7 @@ export default function CouponsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

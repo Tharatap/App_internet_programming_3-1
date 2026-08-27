@@ -8,8 +8,10 @@ import { Badge } from '@/components/shop/badge';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
+import { useBrand } from '@/store/theme-store';
 import { Order, OrderStatus } from '@/types/shop';
 import { formatBaht } from '@/utils/format';
 
@@ -30,6 +32,8 @@ const STATUS_TONE: Record<OrderStatus, 'neutral' | 'accent' | 'success' | 'dange
 };
 
 export default function OrderDetailScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
@@ -135,7 +139,7 @@ export default function OrderDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

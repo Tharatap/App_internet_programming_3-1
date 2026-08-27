@@ -12,10 +12,14 @@ import {
 
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
+import { useBrand } from '@/store/theme-store';
 
 export default function LoginScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const router = useRouter();
   const { intent } = useLocalSearchParams<{ intent?: string }>();
   const { login, logout } = useAuth();
@@ -104,6 +108,7 @@ export default function LoginScreen() {
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <PressableScale
+            accessibilityRole="button"
             style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
             onPress={onSubmit}
             disabled={submitting}>
@@ -111,7 +116,10 @@ export default function LoginScreen() {
           </PressableScale>
         </View>
 
-        <PressableScale style={styles.footerLink} onPress={() => router.push('/(auth)/register')}>
+        <PressableScale
+          accessibilityRole="button"
+          style={styles.footerLink}
+          onPress={() => router.push('/(auth)/register')}>
           <Text style={styles.footerText}>
             ยังไม่มีบัญชี? <Text style={styles.footerLinkText}>สมัครสมาชิก</Text>
           </Text>
@@ -121,7 +129,7 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

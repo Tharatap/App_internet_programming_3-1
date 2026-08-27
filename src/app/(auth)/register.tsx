@@ -12,10 +12,14 @@ import {
 
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
+import { useBrand } from '@/store/theme-store';
 
 export default function RegisterScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const router = useRouter();
   const { register } = useAuth();
 
@@ -30,6 +34,11 @@ export default function RegisterScreen() {
       setError('กรุณากรอกข้อมูลให้ครบทุกช่อง');
       return;
     }
+    const normalizedEmail = email.trim();
+    if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
+      setError('รูปแบบอีเมลไม่ถูกต้อง');
+      return;
+    }
     if (password.length < 8) {
       setError('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');
       return;
@@ -37,7 +46,7 @@ export default function RegisterScreen() {
     setError(null);
     setSubmitting(true);
     try {
-      await register(email.trim(), password, name.trim());
+      await register(normalizedEmail, password, name.trim());
       router.replace('/(tabs)');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'สมัครสมาชิกไม่สำเร็จ');
@@ -104,6 +113,7 @@ export default function RegisterScreen() {
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <PressableScale
+            accessibilityRole="button"
             style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
             onPress={onSubmit}
             disabled={submitting}>
@@ -111,7 +121,10 @@ export default function RegisterScreen() {
           </PressableScale>
         </View>
 
-        <PressableScale style={styles.footerLink} onPress={() => router.push('/(auth)/login')}>
+        <PressableScale
+          accessibilityRole="button"
+          style={styles.footerLink}
+          onPress={() => router.push('/(auth)/login')}>
           <Text style={styles.footerText}>
             มีบัญชีอยู่แล้ว? <Text style={styles.footerLinkText}>เข้าสู่ระบบ</Text>
           </Text>
@@ -121,7 +134,7 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

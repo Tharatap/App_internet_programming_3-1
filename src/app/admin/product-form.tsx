@@ -11,9 +11,11 @@ import { DeleteConfirmModal } from '@/components/shop/delete-confirm-modal';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { TopBar } from '@/components/shop/top-bar';
 import { useToast } from '@/components/shop/toast';
-import { Brand, PixelBorder, Radius } from '@/constants/theme';
+import { PixelBorder, Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
 import { useCatalog } from '@/store/catalog-store';
+import { useBrand } from '@/store/theme-store';
 import { BranchStock, ProductInput } from '@/types/product';
 
 const emptyForm: ProductInput = {
@@ -33,6 +35,8 @@ const emptyForm: ProductInput = {
 };
 
 export default function AdminProductFormScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
@@ -150,6 +154,8 @@ export default function AdminProductFormScreen() {
             <View style={styles.chipRow}>
               {categories.map((cat) => (
                 <PressableScale
+                  accessibilityRole="button"
+                  accessibilityLabel={`เลือกหมวดหมู่ ${cat.name}`}
                   key={cat.id}
                   style={[styles.chip, form.categoryId === cat.id && styles.chipActive]}
                   onPress={() => setField('categoryId', cat.id)}>
@@ -239,7 +245,10 @@ export default function AdminProductFormScreen() {
 
           <View style={styles.branchHeader}>
             <Text style={styles.sectionTitle}>สต๊อกสาขา</Text>
-            <PressableScale style={styles.addBranchButton} onPress={addBranch}>
+            <PressableScale
+              accessibilityRole="button"
+              style={styles.addBranchButton}
+              onPress={addBranch}>
               <Text style={styles.addBranchText}>+ เพิ่มสาขา</Text>
             </PressableScale>
           </View>
@@ -275,6 +284,7 @@ export default function AdminProductFormScreen() {
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <PressableScale
+            accessibilityRole="button"
             style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
             onPress={onSubmit}
             disabled={submitting}>
@@ -282,7 +292,10 @@ export default function AdminProductFormScreen() {
           </PressableScale>
 
           {isEditing ? (
-            <PressableScale style={styles.deleteButton} onPress={() => setDeleteModalVisible(true)}>
+            <PressableScale
+              accessibilityRole="button"
+              style={styles.deleteButton}
+              onPress={() => setDeleteModalVisible(true)}>
               <Text style={styles.deleteButtonText}>ลบสินค้า</Text>
             </PressableScale>
           ) : null}
@@ -306,6 +319,9 @@ function Field(props: {
   keyboardType?: 'default' | 'decimal-pad' | 'number-pad';
   multiline?: boolean;
 }) {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
+
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{props.label}</Text>
@@ -321,7 +337,7 @@ function Field(props: {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

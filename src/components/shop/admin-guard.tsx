@@ -4,8 +4,10 @@ import { type ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/shop/pressable-scale';
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
+import { useBrand } from '@/store/theme-store';
 
 interface Props {
   children: ReactNode;
@@ -16,6 +18,8 @@ interface Props {
  * a "แอดมินเท่านั้น" state for signed-in non-admin users. Used by /admin/* screens.
  */
 export function AdminGuard({ children }: Props) {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const router = useRouter();
   const { loading, isAuthenticated, user, isAdminSession, logout } = useAuth();
 
@@ -40,7 +44,10 @@ export function AdminGuard({ children }: Props) {
         </View>
         <Text style={styles.title}>กรุณาเข้าสู่ระบบ</Text>
         <Text style={styles.subtitle}>เข้าสู่ระบบเพื่อใช้งานส่วนนี้ของแอป</Text>
-        <PressableScale style={styles.button} onPress={() => router.push('/(auth)/login')}>
+        <PressableScale
+          accessibilityRole="button"
+          style={styles.button}
+          onPress={() => router.push('/(auth)/login')}>
           <Text style={styles.buttonText}>เข้าสู่ระบบ</Text>
         </PressableScale>
       </View>
@@ -64,6 +71,7 @@ export function AdminGuard({ children }: Props) {
             : 'บัญชีของคุณไม่มีสิทธิ์เข้าถึงส่วนนี้'}
         </Text>
         <PressableScale
+          accessibilityRole="button"
           style={styles.button}
           onPress={isAdminAccount ? switchToAdmin : () => router.back()}>
           <Text style={styles.buttonText}>
@@ -77,7 +85,7 @@ export function AdminGuard({ children }: Props) {
   return <>{children}</>;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   center: {
     flex: 1,
     alignItems: 'center',

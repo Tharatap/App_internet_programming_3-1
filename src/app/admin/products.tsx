@@ -11,13 +11,17 @@ import { PressableScale } from '@/components/shop/pressable-scale';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { TopBar } from '@/components/shop/top-bar';
 import { useToast } from '@/components/shop/toast';
-import { Brand, PixelBorder, PixelFonts, Radius } from '@/constants/theme';
+import { PixelBorder, PixelFonts, Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
 import { useCatalog } from '@/store/catalog-store';
+import { useBrand } from '@/store/theme-store';
 import { Product } from '@/types/product';
 import { formatBaht } from '@/utils/format';
 
 export default function AdminProductsScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { token } = useAuth();
@@ -47,6 +51,8 @@ export default function AdminProductsScreen() {
   const renderItem = ({ item }: { item: Product }) => (
     <View style={styles.card}>
       <PressableScale
+        accessibilityRole="button"
+        accessibilityLabel={`เปิดหน้าแก้ไข ${item.name}`}
         style={styles.cardMain}
         onPress={() => router.push(`/admin/product-form?id=${item.id}`)}>
         <SkeletonImage uri={item.images[0]} style={styles.image} borderRadius={Radius.md} />
@@ -79,6 +85,7 @@ export default function AdminProductsScreen() {
           renderItem={renderItem}
           ListHeaderComponent={
             <PressableScale
+              accessibilityRole="button"
               style={styles.addRow}
               onPress={() => router.push('/admin/product-form')}>
               <Plus size={18} color={Brand.onAccent} strokeWidth={2.5} />
@@ -101,7 +108,7 @@ export default function AdminProductsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

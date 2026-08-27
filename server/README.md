@@ -17,7 +17,7 @@ SELECT COUNT(*) FROM products;  -- ต้องได้ 12
 
 ```bash
 ssh std6730202645@119.59.102.161 -p 2222
-test2 บัญชีนี้รหัส 11111111 เป็น admin
+test2.com บัญชีนี้รหัส 11111111 เป็น admin
 ```
 ใส่รหัสผ่าน (ดูที่ http://nindam.ddns.net/web/) → **จดตัวเลข Assigned backend port ที่ระบบแจ้ง**
 (ต้องใช้ port นี้เท่านั้น — port อื่นถูกไฟร์วอลล์ปิด)

@@ -2,7 +2,8 @@ import { Image } from 'expo-image';
 import { useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 
-import { Brand, PixelBorder } from '@/constants/theme';
+import { PixelBorder, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 
 interface Props {
   uri?: string;
@@ -16,6 +17,7 @@ interface Props {
  * image fails to load or there is no `uri` (Phase 1 mock data).
  */
 export function SkeletonImage({ uri, style, borderRadius = 0 }: Props) {
+  const styles = useStyles(makeStyles);
   const [failed, setFailed] = useState(false);
   const showImage = !!uri && !failed;
 
@@ -34,7 +36,7 @@ export function SkeletonImage({ uri, style, borderRadius = 0 }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   base: {
     backgroundColor: Brand.surfaceDeep,
     borderWidth: PixelBorder.base,

@@ -2,11 +2,15 @@ import { Redirect, Tabs } from 'expo-router';
 import { Heart, House, LayoutGrid, ShoppingCart, User } from 'lucide-react-native';
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 
-import { Brand, PixelBorder, PixelFonts } from '@/constants/theme';
+import { PixelBorder, PixelFonts, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
 import { useShop } from '@/store/shop-store';
+import { useBrand } from '@/store/theme-store';
 
 export default function TabsLayout() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const { cartCount } = useShop();
   const { loading, isAuthenticated, isGuest } = useAuth();
 
@@ -58,7 +62,11 @@ export default function TabsLayout() {
         options={{
           title: 'ตะกร้า',
           tabBarBadge: cartCount > 0 ? cartCount : undefined,
-          tabBarBadgeStyle: { backgroundColor: Brand.favoriteIcon, fontSize: 10 },
+          tabBarBadgeStyle: {
+            backgroundColor: Brand.favoriteIcon,
+            color: Brand.onAccent,
+            fontSize: 10,
+          },
           tabBarIcon: ({ color }) => <ShoppingCart size={23} color={color} strokeWidth={2} />,
         }}
       />
@@ -80,7 +88,7 @@ export default function TabsLayout() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   center: {
     flex: 1,
     alignItems: 'center',

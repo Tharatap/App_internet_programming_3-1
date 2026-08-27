@@ -11,11 +11,15 @@ import { PressableScale } from '@/components/shop/pressable-scale';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { TopBar } from '@/components/shop/top-bar';
 import { useToast } from '@/components/shop/toast';
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
+import { useBrand } from '@/store/theme-store';
 import { Address } from '@/types/shop';
 
 export default function AddressesScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
@@ -89,6 +93,7 @@ export default function AddressesScreen() {
 
         <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
           <PressableScale
+            accessibilityRole="button"
             style={styles.addButton}
             onPress={() => router.push('/addresses/edit')}>
             <Text style={styles.addButtonText}>+ เพิ่มที่อยู่ใหม่</Text>
@@ -108,7 +113,7 @@ export default function AddressesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

@@ -4,10 +4,14 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PressableScale } from '@/components/shop/pressable-scale';
-import { Brand, PixelBorder, PixelFonts, PixelShadow } from '@/constants/theme';
+import { PixelBorder, PixelFonts, PixelShadow, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
+import { useBrand } from '@/store/theme-store';
 import { formatBaht } from '@/utils/format';
 
 export default function CheckoutSuccessScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const { orderId, orderNumber, total } = useLocalSearchParams<{
     orderId: string;
     orderNumber: string;
@@ -27,12 +31,16 @@ export default function CheckoutSuccessScreen() {
 
       <View style={styles.actions}>
         <PressableScale
+          accessibilityRole="button"
           style={styles.primaryButton}
           pixelShadow={PixelShadow.sm}
           onPress={() => router.replace(`/orders/${orderId}`)}>
           <Text style={styles.primaryText}>ดูคำสั่งซื้อ</Text>
         </PressableScale>
-        <PressableScale style={styles.secondaryButton} onPress={() => router.replace('/(tabs)')}>
+        <PressableScale
+          accessibilityRole="button"
+          style={styles.secondaryButton}
+          onPress={() => router.replace('/(tabs)')}>
           <Text style={styles.secondaryText}>กลับหน้าแรก</Text>
         </PressableScale>
       </View>
@@ -40,7 +48,7 @@ export default function CheckoutSuccessScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

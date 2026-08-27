@@ -2,7 +2,8 @@ import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/shop/pressable-scale';
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 
 type Props = {
   children: ReactNode;
@@ -12,7 +13,11 @@ type State = {
   hasError: boolean;
 };
 
-export class ErrorBoundary extends Component<Props, State> {
+type BoundaryProps = Props & {
+  styles: ReturnType<typeof makeStyles>;
+};
+
+class ErrorBoundaryCore extends Component<BoundaryProps, State> {
   state: State = { hasError: false };
 
   static getDerivedStateFromError(): State {
@@ -28,6 +33,8 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   render() {
+    const { styles } = this.props;
+
     if (this.state.hasError) {
       return (
         <View style={styles.container}>
@@ -51,7 +58,12 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-const styles = StyleSheet.create({
+export function ErrorBoundary({ children }: Props) {
+  const styles = useStyles(makeStyles);
+  return <ErrorBoundaryCore styles={styles}>{children}</ErrorBoundaryCore>;
+}
+
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',

@@ -3,7 +3,9 @@ import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-nativ
 
 import { PixelPanel } from '@/components/shop/pixel-panel';
 import { PressableScale } from '@/components/shop/pressable-scale';
-import { Brand, PixelFonts, Radius } from '@/constants/theme';
+import { PixelFonts, Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
+import { useBrand } from '@/store/theme-store';
 
 const CONFIRM_TEXT = 'Confirm Delete';
 
@@ -17,6 +19,8 @@ interface Props {
 
 /** ยืนยันการลบสินค้าด้วยการพิมพ์ข้อความคงที่ กันกดพลาด — ใช้ร่วมกันทั้งหน้าลิสต์และหน้าฟอร์มแก้ไข */
 export function DeleteConfirmModal({ visible, productName, deleting, onCancel, onConfirm }: Props) {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const [input, setInput] = useState('');
 
   // เคลียร์ข้อความที่พิมพ์ไว้ทุกครั้งที่ modal เปิดใหม่ กันเห็นข้อความเดิมค้าง
@@ -48,10 +52,14 @@ export function DeleteConfirmModal({ visible, productName, deleting, onCancel, o
               autoCorrect={false}
             />
             <View style={styles.buttonRow}>
-              <PressableScale style={styles.cancelButton} onPress={onCancel}>
+              <PressableScale
+                accessibilityRole="button"
+                style={styles.cancelButton}
+                onPress={onCancel}>
                 <Text style={styles.cancelText}>ยกเลิก</Text>
               </PressableScale>
               <PressableScale
+                accessibilityRole="button"
                 style={[styles.deleteButton, !canConfirm && styles.deleteButtonDisabled]}
                 onPress={onConfirm}
                 disabled={!canConfirm}>
@@ -65,7 +73,7 @@ export function DeleteConfirmModal({ visible, productName, deleting, onCancel, o
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(43,33,24,0.5)',

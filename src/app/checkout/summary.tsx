@@ -11,7 +11,8 @@ import { PressableScale } from '@/components/shop/pressable-scale';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, PixelBorder, PixelFonts, PixelShadow, Radius } from '@/constants/theme';
+import { PixelBorder, PixelFonts, PixelShadow, Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
 import { useShop } from '@/store/shop-store';
 import { Address } from '@/types/shop';
@@ -21,6 +22,7 @@ const FREE_SHIPPING_THRESHOLD = 500;
 const SHIPPING_FEE = 50;
 
 export default function CheckoutSummaryScreen() {
+  const styles = useStyles(makeStyles);
   const { addressId, couponCode, couponTitle, discountType, discountValue } =
     useLocalSearchParams<{
       addressId: string;
@@ -114,6 +116,8 @@ export default function CheckoutSummaryScreen() {
           </View>
 
           <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel="เลือกคูปองส่วนลด"
             style={styles.couponRow}
             onPress={() =>
               router.push(`/coupons?addressId=${addressId}`)
@@ -158,6 +162,7 @@ export default function CheckoutSummaryScreen() {
             <Text style={styles.totalValue}>{formatBaht(total)}</Text>
           </View>
           <PressableScale
+            accessibilityRole="button"
             style={[styles.confirmButton, submitting && styles.confirmButtonDisabled]}
             pixelShadow={submitting ? undefined : PixelShadow.sm}
             onPress={onConfirm}
@@ -172,7 +177,7 @@ export default function CheckoutSummaryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

@@ -21,9 +21,11 @@ import { PressableScale } from '@/components/shop/pressable-scale';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, PixelBorder, PixelFonts, PixelShadow, Radius } from '@/constants/theme';
+import { PixelBorder, PixelFonts, PixelShadow, Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
 import { useShop } from '@/store/shop-store';
+import { useBrand } from '@/store/theme-store';
 
 interface MenuItem {
   icon: LucideIcon;
@@ -32,6 +34,8 @@ interface MenuItem {
 }
 
 export default function ProfileScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, token, logout, isGuest, isAuthenticated, isAdminSession, exitGuestMode } = useAuth();
@@ -97,11 +101,13 @@ export default function ProfileScreen() {
           </Text>
           <View style={styles.guestActions}>
             <PressableScale
+              accessibilityRole="button"
               style={[styles.guestButton, styles.guestPrimaryButton]}
               onPress={() => router.push('/(auth)/login')}>
               <Text style={styles.guestPrimaryText}>เข้าสู่ระบบ</Text>
             </PressableScale>
             <PressableScale
+              accessibilityRole="button"
               style={[styles.guestButton, styles.guestSecondaryButton]}
               onPress={exitGuestMode}>
               <Text style={styles.guestSecondaryText}>ออกจากโหมดผู้เยี่ยมชม</Text>
@@ -156,6 +162,8 @@ export default function ProfileScreen() {
               const Icon = item.icon;
               return (
                 <PressableScale
+                  accessibilityRole="button"
+                  accessibilityLabel={`เปิดหน้า ${item.label}`}
                   key={item.label}
                   onPress={() => router.push(item.href)}
                   style={[styles.menuRow, index < menu.length - 1 && styles.menuDivider]}>
@@ -168,7 +176,10 @@ export default function ProfileScreen() {
           </PixelPanel>
 
           {user?.isAdmin && !isAdminSession ? (
-            <PressableScale style={styles.adminModeHint} onPress={onSwitchToAdmin}>
+            <PressableScale
+              accessibilityRole="button"
+              style={styles.adminModeHint}
+              onPress={onSwitchToAdmin}>
               <Text style={styles.adminModeHintText}>
                 คุณเข้าสู่ระบบในโหมดลูกค้า · สลับไปโหมดแอดมิน
               </Text>
@@ -188,7 +199,7 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

@@ -17,7 +17,7 @@
 
 | # | กฎ |
 |---|-----|
-| 1 | **ห้าม hardcode สี** — ใช้ `Brand` / `Radius` จาก `src/constants/theme.ts` เท่านั้น |
+| 1 | **ห้าม hardcode สี** — ใช้ palette จาก theme store และ `Radius`/token จาก `src/constants/theme.ts` เท่านั้น |
 | 2 | **ห้ามเขียน component ใหม่ทับของเดิม** — ต่อยอดจาก `src/components/shop/` (มี 11 ตัวพร้อมใช้) |
 | 3 | **ห้ามเขียนฟังก์ชัน format ราคา/เวลาใหม่** — ใช้ `formatBaht()` / `formatCountdown()` จาก `src/utils/format.ts` |
 | 4 | ปุ่มที่กดได้ทุกปุ่มใช้ `PressableScale` (ไม่ใช่ `Pressable` เปล่า) |
@@ -25,6 +25,21 @@
 | 6 | หน้าใหม่ทุกหน้าต้องมี `TopBar` ให้สอดคล้องกับหน้าเดิม |
 | 7 | เสร็จงานต้องรัน `npx tsc --noEmit` ให้ผ่าน **0 error** ก่อนบอกว่าเสร็จ |
 | 8 | **ห้าม commit `.env`** หรือค่า secret ใดๆ |
+| 9 | **`Brand` ไม่ใช่ static export อีกต่อไป** — หน้าจอ/component ใหม่ทุกตัวต้องใช้ `useStyles(makeStyles)` + `useBrand()` |
+
+ตัวอย่างย่อสำหรับหน้าจอ/component ใหม่:
+
+```tsx
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
+  screen: { backgroundColor: Brand.background },
+});
+
+function Screen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
+  // ใช้ styles ใน style prop และ Brand กับสีใน JSX
+}
+```
 
 ## โครงสร้างที่ต้องรู้
 
@@ -35,7 +50,7 @@ src/
 │   ├── product/[id]  หน้ารายละเอียดสินค้า
 │   └── products.tsx  หน้ารายการสินค้า/ผลค้นหา
 ├── components/shop/  component ใช้ซ้ำ 11 ตัว ← ดูรายละเอียดใน skill chaje-shop
-├── constants/theme.ts  Brand (สี), Radius, AppFrameWidth
+├── constants/theme.ts  LightBrand/DarkBrand, BrandPalette, Radius, AppFrameWidth
 ├── store/            catalog-store (สินค้า), shop-store (ตะกร้า/โปรด)
 ├── data/             products.json, categories.json (12 สินค้า / 7 หมวด)
 ├── types/product.ts  Product, Category, CartItem, BranchStock

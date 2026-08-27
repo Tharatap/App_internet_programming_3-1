@@ -77,17 +77,25 @@ export const AppFrameWidth = 480;
  * Warm cream background, thick dark-brown pixel borders, hard offset shadows
  * (no blur), lime-green CTA kept from the original minimal theme.
  */
-export const Brand = {
+export const LightBrand = {
   /** Main page background — warm cream */
   background: '#FDF3DC',
+  /** Backdrop behind the centered app frame on wide web screens */
+  webBackdrop: '#E9E9EC',
   /** Card / panel surface (near-white, sits on top of the cream background) */
   surface: '#FFFDF5',
   /** Slightly deeper surface for skeletons / image placeholders */
   surfaceDeep: '#F5EDD8',
+  /** Translucent surface for controls floating over product images */
+  floatingSurface: 'rgba(255,253,245,0.9)',
+  /** Background for selected cards and rows */
+  selectedBg: '#EAF6E1',
   /** Primary CTA accent (lime green) — unchanged from the original theme */
   accent: '#D6F26A',
   /** Text/icon that sits on the accent button */
   onAccent: '#2B2118',
+  /** ตัวอักษร/ไอคอนที่วางบนสีพาสเทล (CategoryPalette) ซึ่งสว่างทั้งสองโหมด */
+  onPastel: '#2B2118',
   /** Primary text (warm near-black) */
   text: '#2B2118',
   /** Secondary text */
@@ -115,7 +123,40 @@ export const Brand = {
   orange: '#FF9A3D',
   mint: '#C9E4C5',
   tan: '#FFDDA8',
-} as const;
+};
+
+export type BrandPalette = typeof LightBrand;
+
+/** Dark counterpart of the cozy pixel palette. */
+export const DarkBrand: BrandPalette = {
+  background: '#211A14',
+  webBackdrop: '#15100C',
+  surface: '#2C231B',
+  surfaceDeep: '#3A2E23',
+  floatingSurface: 'rgba(44,35,27,0.9)',
+  selectedBg: '#33402F',
+  accent: '#D6F26A',
+  onAccent: '#2B2118',
+  /** ตัวอักษร/ไอคอนที่วางบนสีพาสเทล (CategoryPalette) ซึ่งสว่างทั้งสองโหมด */
+  onPastel: '#2B2118',
+  text: '#FFF3D6',
+  textSecondary: '#D8C7A5',
+  textMuted: '#A99778',
+  successBg: '#78B96E',
+  successText: '#2B2118',
+  favoriteBg: '#5E2B3C',
+  favoriteIcon: '#FF8FB3',
+  divider: '#F2D9AE',
+  danger: '#FF8EAA',
+  notification: '#FF6B8A',
+  tabInactive: '#B7A483',
+  skyBlue: '#7DB7CC',
+  saleBg: '#C97D91',
+  coin: '#D8A83F',
+  orange: '#D27B35',
+  mint: '#7FA77A',
+  tan: '#C99F67',
+};
 
 /** Pastel background per product category chip (matches the mockup's category tiles). */
 export const CategoryPalette = [

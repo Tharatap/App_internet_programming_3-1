@@ -3,15 +3,17 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { usersApi } from '@/api/users';
+import { Badge } from '@/components/shop/badge';
 import { Checkbox } from '@/components/shop/checkbox';
 import { ConfirmModal } from '@/components/shop/confirm-modal';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { RequireAuth } from '@/components/shop/require-auth';
 import { TopBar } from '@/components/shop/top-bar';
 import { useToast } from '@/components/shop/toast';
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
+import { useThemeMode } from '@/store/theme-store';
 import { searchHistory } from '@/utils/search-history';
 
 const THEME_OPTIONS = [
@@ -26,27 +28,26 @@ const LANGUAGE_OPTIONS = [
 ] as const;
 
 export default function SettingsScreen() {
+  const styles = useStyles(makeStyles);
+  const { mode: theme, setMode } = useThemeMode();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user, token, logout } = useAuth();
+  const { user, logout, updateSettings } = useAuth();
   const { showToast } = useToast();
 
-  const [theme, setTheme] = useState(user?.settings.theme ?? 'light');
-  const [language, setLanguage] = useState(user?.settings.language ?? 'th');
-  const [notifyPromo, setNotifyPromo] = useState(user?.settings.notifyPromo ?? true);
+  const language = user?.settings.language ?? 'th';
+  const notifyPromo = user?.settings.notifyPromo ?? true;
   const [clearCacheVisible, setClearCacheVisible] = useState(false);
 
   const saveTheme = (value: typeof theme) => {
-    setTheme(value);
-    if (token) usersApi.updateSettings(token, { theme: value }).catch(() => {});
+    setMode(value);
+    updateSettings({ theme: value });
   };
   const saveLanguage = (value: typeof language) => {
-    setLanguage(value);
-    if (token) usersApi.updateSettings(token, { language: value }).catch(() => {});
+    updateSettings({ language: value });
   };
   const saveNotifyPromo = (value: boolean) => {
-    setNotifyPromo(value);
-    if (token) usersApi.updateSettings(token, { notifyPromo: value }).catch(() => {});
+    updateSettings({ notifyPromo: value });
   };
 
   const onClearCache = () => {
@@ -86,20 +87,27 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>ภาษา</Text>
-            <View style={styles.chipRow}>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitle}>ภาษา</Text>
+              <Badge label="เร็วๆ นี้" tone="neutral" />
+            </View>
+            <View style={[styles.chipRow, styles.languageRow]}>
               {LANGUAGE_OPTIONS.map((opt) => (
                 <Chip
                   key={opt.value}
                   label={opt.label}
                   selected={language === opt.value}
                   onPress={() => saveLanguage(opt.value)}
+                  disabled
                 />
               ))}
             </View>
           </View>
 
-          <PressableScale style={styles.row} onPress={() => saveNotifyPromo(!notifyPromo)}>
+          <PressableScale
+            accessibilityRole="button"
+            style={styles.row}
+            onPress={() => saveNotifyPromo(!notifyPromo)}>
             <Checkbox
               checked={notifyPromo}
               onToggle={() => saveNotifyPromo(!notifyPromo)}
@@ -108,11 +116,17 @@ export default function SettingsScreen() {
             <Text style={styles.rowLabel}>รับการแจ้งเตือนโปรโมชัน</Text>
           </PressableScale>
 
-          <PressableScale style={styles.linkRow} onPress={onClearCache}>
+          <PressableScale
+            accessibilityRole="button"
+            style={styles.linkRow}
+            onPress={onClearCache}>
             <Text style={styles.linkText}>ล้างแคช</Text>
           </PressableScale>
 
-          <PressableScale style={styles.logoutButton} onPress={onLogout}>
+          <PressableScale
+            accessibilityRole="button"
+            style={styles.logoutButton}
+            onPress={onLogout}>
             <Text style={styles.logoutText}>ออกจากระบบ</Text>
           </PressableScale>
         </ScrollView>
@@ -134,19 +148,28 @@ function Chip({
   label,
   selected,
   onPress,
+  disabled,
 }: {
   label: string;
   selected: boolean;
   onPress: () => void;
+  disabled?: boolean;
 }) {
+  const styles = useStyles(makeStyles);
+
   return (
-    <PressableScale onPress={onPress} style={[styles.chip, selected && styles.chipSelected]}>
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={`เลือก ${label}`}
+      onPress={onPress}
+      disabled={disabled}
+      style={[styles.chip, selected && styles.chipSelected]}>
       <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
     </PressableScale>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,
@@ -164,9 +187,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Brand.text,
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   chipRow: {
     flexDirection: 'row',
     gap: 8,
+  },
+  languageRow: {
+    opacity: 0.5,
   },
   chip: {
     paddingHorizontal: 16,

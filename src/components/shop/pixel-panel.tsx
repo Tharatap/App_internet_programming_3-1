@@ -1,7 +1,8 @@
 import { type ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 
-import { Brand, PixelBorder, PixelShadow } from '@/constants/theme';
+import { PixelBorder, PixelShadow } from '@/constants/theme';
+import { useBrand } from '@/store/theme-store';
 
 interface Props {
   children: ReactNode;
@@ -21,11 +22,15 @@ interface Props {
 export function PixelPanel({
   children,
   style,
-  backgroundColor = Brand.surface,
+  backgroundColor,
   shadowOffset = PixelShadow.md,
-  shadowColor = Brand.divider,
+  shadowColor,
   borderWidth = PixelBorder.base,
 }: Props) {
+  const Brand = useBrand();
+  const panelBackgroundColor = backgroundColor ?? Brand.surface;
+  const panelShadowColor = shadowColor ?? Brand.divider;
+
   return (
     <View style={{ marginRight: shadowOffset, marginBottom: shadowOffset }}>
       <View
@@ -35,11 +40,15 @@ export function PixelPanel({
           left: shadowOffset,
           width: '100%',
           height: '100%',
-          backgroundColor: shadowColor,
+          backgroundColor: panelShadowColor,
           pointerEvents: 'none',
         }}
       />
-      <View style={[{ backgroundColor, borderWidth, borderColor: shadowColor }, style]}>
+      <View
+        style={[
+          { backgroundColor: panelBackgroundColor, borderWidth, borderColor: panelShadowColor },
+          style,
+        ]}>
         {children}
       </View>
     </View>

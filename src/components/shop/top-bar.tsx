@@ -14,7 +14,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HeartButton } from '@/components/shop/heart-button';
 import { IconButton } from '@/components/shop/icon-button';
 import { PressableScale } from '@/components/shop/pressable-scale';
-import { Brand, PixelBorder, PixelFonts } from '@/constants/theme';
+import { PixelBorder, PixelFonts, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
+import { useBrand } from '@/store/theme-store';
 
 interface HomeProps {
   variant: 'home';
@@ -42,6 +44,8 @@ type Props = HomeProps | ListProps;
 
 /** Reusable top header. `home` and `list` variants (detail uses FloatingHeader). */
 export function TopBar(props: Props) {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const insets = useSafeAreaInsets();
   const paddingTop = insets.top + 8;
 
@@ -64,7 +68,11 @@ export function TopBar(props: Props) {
           <Settings size={20} color={Brand.text} strokeWidth={1.75} />
         </IconButton>
         {props.onAddressPress ? (
-          <PressableScale style={styles.homeCenter} onPress={props.onAddressPress}>
+          <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel="เปิดหน้าที่อยู่จัดส่ง"
+            style={styles.homeCenter}
+            onPress={props.onAddressPress}>
             {addressContent}
           </PressableScale>
         ) : (
@@ -93,6 +101,8 @@ function ListBar({
   onOptions,
   paddingTop,
 }: ListProps & { paddingTop: number }) {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const router = useRouter();
 
   const handleBack = () => {
@@ -145,6 +155,8 @@ export function FloatingHeader({
   /** Included in the shared text/link when the user taps the share button. */
   productName?: string;
 }) {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -180,7 +192,7 @@ export function FloatingHeader({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',

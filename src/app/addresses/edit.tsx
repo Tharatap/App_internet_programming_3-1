@@ -7,8 +7,10 @@ import { addressesApi } from '@/api/addresses';
 import { Checkbox } from '@/components/shop/checkbox';
 import { PressableScale } from '@/components/shop/pressable-scale';
 import { TopBar } from '@/components/shop/top-bar';
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
+import { useBrand } from '@/store/theme-store';
 import { AddressInput } from '@/types/shop';
 
 const emptyForm: AddressInput = {
@@ -23,6 +25,7 @@ const emptyForm: AddressInput = {
 };
 
 export default function EditAddressScreen() {
+  const styles = useStyles(makeStyles);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
@@ -56,13 +59,28 @@ export default function EditAddressScreen() {
       setError('กรุณากรอกชื่อผู้รับ เบอร์โทร และที่อยู่ให้ครบ');
       return;
     }
+    const normalizedPhone = form.phone.replace(/[\s-]/g, '');
+    if (!/^0\d{8,9}$/.test(normalizedPhone)) {
+      setError('เบอร์โทรไม่ถูกต้อง (ตัวเลข 9-10 หลัก ขึ้นต้นด้วย 0)');
+      return;
+    }
+    const normalizedPostcode = form.postcode.trim();
+    if (normalizedPostcode && !/^\d{5}$/.test(normalizedPostcode)) {
+      setError('รหัสไปรษณีย์ต้องเป็นตัวเลข 5 หลัก');
+      return;
+    }
+    const input: AddressInput = {
+      ...form,
+      phone: normalizedPhone,
+      postcode: normalizedPostcode,
+    };
     setError(null);
     setSubmitting(true);
     try {
       if (isEditing) {
-        await addressesApi.update(token, Number(id), form);
+        await addressesApi.update(token, Number(id), input);
       } else {
-        await addressesApi.create(token, form);
+        await addressesApi.create(token, input);
       }
       router.back();
     } catch (err) {
@@ -86,6 +104,7 @@ export default function EditAddressScreen() {
           onChangeText={setField('phone')}
           placeholder="08xxxxxxxx"
           keyboardType="phone-pad"
+          maxLength={10}
         />
         <Field
           label="ที่อยู่"
@@ -101,6 +120,7 @@ export default function EditAddressScreen() {
           value={form.postcode}
           onChangeText={setField('postcode')}
           keyboardType="number-pad"
+          maxLength={5}
         />
 
         <View style={styles.defaultRow}>
@@ -115,6 +135,7 @@ export default function EditAddressScreen() {
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <PressableScale
+          accessibilityRole="button"
           style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
           onPress={onSubmit}
           disabled={submitting}>
@@ -131,8 +152,12 @@ function Field(props: {
   onChangeText: (text: string) => void;
   placeholder?: string;
   keyboardType?: 'default' | 'phone-pad' | 'number-pad';
+  maxLength?: number;
   multiline?: boolean;
 }) {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
+
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{props.label}</Text>
@@ -143,13 +168,14 @@ function Field(props: {
         placeholder={props.placeholder}
         placeholderTextColor={Brand.textMuted}
         keyboardType={props.keyboardType}
+        maxLength={props.maxLength}
         multiline={props.multiline}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

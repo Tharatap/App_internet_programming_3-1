@@ -1,9 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
 import { useNetworkStatus } from '@/hooks/use-network-status';
+import { useStyles } from '@/hooks/use-styles';
 
 export function OfflineBanner() {
+  const styles = useStyles(makeStyles);
   const isOnline = useNetworkStatus();
 
   if (isOnline) {
@@ -17,7 +19,7 @@ export function OfflineBanner() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   banner: {
     alignItems: 'center',
     paddingHorizontal: 16,

@@ -1,8 +1,10 @@
 import { type ReactNode } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 
-import { Brand, PixelBorder, PixelShadow } from '@/constants/theme';
 import { PressableScale } from '@/components/shop/pressable-scale';
+import { PixelBorder, PixelShadow, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
+import { useBrand } from '@/store/theme-store';
 
 type Variant = 'surface' | 'floating' | 'favorite';
 
@@ -27,9 +29,11 @@ export function IconButton({
   showBadgeDot,
   accessibilityLabel,
 }: Props) {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const backgroundColor =
     variant === 'floating'
-      ? 'rgba(255,253,245,0.9)'
+      ? Brand.floatingSurface
       : variant === 'favorite'
         ? Brand.favoriteBg
         : Brand.surface;
@@ -57,7 +61,7 @@ export function IconButton({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   button: {
     alignItems: 'center',
     justifyContent: 'center',

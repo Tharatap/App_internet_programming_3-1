@@ -6,7 +6,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Brand } from '@/constants/theme';
+import { useBrand } from '@/store/theme-store';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -30,10 +30,12 @@ type Props = ComponentProps<typeof Pressable> & {
 export function PressableScale({
   activeScale = 0.97,
   pixelShadow,
-  shadowColor = Brand.divider,
+  shadowColor,
   style,
   ...rest
 }: Props) {
+  const Brand = useBrand();
+  const color = shadowColor ?? Brand.divider;
   const scale = useSharedValue(1);
   const press = useSharedValue(0);
 
@@ -55,6 +57,7 @@ export function PressableScale({
   if (!pixelShadow) {
     return (
       <AnimatedPressable
+        accessibilityRole="button"
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         style={[animatedStyle, style]}
@@ -72,11 +75,12 @@ export function PressableScale({
           left: pixelShadow,
           width: '100%',
           height: '100%',
-          backgroundColor: shadowColor,
+          backgroundColor: color,
           pointerEvents: 'none',
         }}
       />
       <AnimatedPressable
+        accessibilityRole="button"
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         style={[animatedStyle, style]}

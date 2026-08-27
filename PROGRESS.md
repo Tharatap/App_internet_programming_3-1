@@ -3,16 +3,28 @@
 > **สำหรับ AI:** อ่านไฟล์นี้ก่อนเริ่มงานเสมอ เพื่อไม่ต้องสำรวจโค้ดซ้ำ (ประหยัด token)
 > **ทำงานเสร็จแต่ละก้อน → กลับมาอัปเดตไฟล์นี้ทันที** (ดูวิธีอัปเดตท้ายไฟล์)
 
-**อัปเดตล่าสุด:** 2026-08-13 · **สถานะรวม:** Phase 1 เสร็จ 100% · Phase 2: PART A (backend) ✅ deploy สำเร็จ+ทดสอบผ่านหมด ·
+**อัปเดตล่าสุด:** 2026-08-27 · **สถานะรวม:** Phase 1 เสร็จ 100% · Phase 2: PART A (backend) ✅ deploy สำเร็จ+ทดสอบผ่านหมด ·
 PART B (auth+เชื่อม API) ✅ เขียนเสร็จ+**ทดสอบผ่านจริงจากเบราว์เซอร์แล้ว** (login ใช้งานได้) ·
 PART C (ทำให้ปุ่มที่เหลือใช้งานได้จริง) ✅ เขียนเสร็จ ยังไม่ทดสอบครบทุก flow ·
 🎨 **Pixel Theme Reskin** ✅ เขียนเสร็จทั้งแอป ผ่าน typecheck 0 error + bundle สำเร็จ + **เปิดดูจริงบนเบราว์เซอร์แล้ว ผ่าน** (2026-08-06) ·
-🛠️ **แอดมิน: เพิ่ม/แก้ไข/ลบสินค้า** ✅ เขียนเสร็จ `tsc --noEmit` ผ่าน 0 error ยังไม่ได้ทดสอบจริง (ต้องรัน SQL + deploy backend ก่อน)
+🛠️ **แอดมิน: เพิ่ม/แก้ไข/ลบสินค้า** ✅ **ทดสอบจริงกับ DB ผ่านแล้ว** (2026-08-27)
 · PART D ก้อนที่ 1 (Error Boundary + Offline Handling) ✅ เขียนเสร็จและ `tsc --noEmit` ผ่าน 0 error ·
+· **PART D ส่วนที่เหลือ ด่าน 1 — Validation** ✅ ตรวจเบอร์โทร/รหัสไปรษณีย์ในฟอร์มที่อยู่และรูปแบบอีเมล
+ตอนสมัครสมาชิกก่อนยิง API · `tsc --noEmit` ผ่าน 0 error ·
+· **PART D ส่วนที่เหลือ ด่าน 2 — Pull-to-refresh** ✅ Home, รายการสินค้า, คำสั่งซื้อ และแจ้งเตือน
+โหลดข้อมูลใหม่ด้วยการลากลงได้ · spinner ใช้สีตามธีมและหยุดเมื่อโหลดล้มเหลว · `tsc --noEmit` ผ่าน 0 error ·
+· **PART D ส่วนที่เหลือ ด่าน 3 — Accessibility** ✅ `PressableScale` ทุกจุดมี accessibility prop ที่ call site แล้ว ·
+ปุ่ม/การ์ด/แถวที่ข้อความไม่สื่อการกระทำมี label ภาษาไทย และ `ProductCard` อ่านชื่อสินค้าแบบไดนามิก ·
+ตรวจด้วย AST เหลือ 0 จุดที่ไม่มี prop · `tsc --noEmit` ผ่าน 0 error ·
+· **PART D ปิดครบแล้ว (2026-08-27)** — ด่าน 4 (pagination) ตัดสินใจข้าม เหตุผลอยู่ใน "ข้อจำกัดที่รู้อยู่" ·
 🔐 **Auth Gateway** ✅ welcome 4 ทางเลือก + guest mode + admin session role — `tsc --noEmit` ผ่าน 0 error
 + **ทดสอบมือบนเบราว์เซอร์ผ่านครบทุก flow แล้ว** (2026-08-13) ·
-🧹 **Cleanup ปุ่ม/ระบบที่ใช้จริงไม่ได้** ✅ เก็บก้อน 1,2,3,5 เสร็จ (เหลือก้อน 4 ธีม/ภาษา รอตัดสินใจ)
+🧹 **Cleanup ปุ่ม/ระบบที่ใช้จริงไม่ได้** ✅ เก็บครบทั้ง 5 ก้อนแล้ว
 — รายละเอียดใน `CLEANUP_PLAN.md`
+· 🎨 **Dark Mode + ตั้งค่าใช้งานได้จริง (Batch 4 ด่าน 1-4)** ✅ ธีมมืดทำงานทั้งแอปผ่าน
+`LightBrand`/`DarkBrand` + `ThemeProvider` + `useStyles(makeStyles)`/`useBrand()` (ลบ static `Brand` export แล้ว) ·
+แจ้งเตือนโปรโมชันกรองตาม `notifyPromo` จริง · ภาษายังเป็นเฟส i18n ถัดไป ติดป้าย "เร็วๆ นี้" ·
+`tsc --noEmit` ผ่าน 0 error + **ทดสอบมือบนเบราว์เซอร์ผ่านแล้ว** — รายละเอียดใน `PLAN_batch4_theme.md`
 
 ---
 
@@ -84,7 +96,7 @@ guest เข้าดูสินค้าได้/ออกจากโหม�
 ## 🧹 Cleanup — ปุ่ม/ระบบที่ "มีอยู่แต่ใช้จริงไม่ได้" (2026-08-13)
 
 > ตรวจโค้ดทั้งโปรเจกต์แล้วแยกเป็น 5 ก้อน — **แผนเต็ม + prompt อยู่ใน `CLEANUP_PLAN.md`**
-> ทำเสร็จแล้ว 4 ก้อน เหลือก้อน 4 (ธีม/ภาษา) ที่ต้องตัดสินใจก่อนว่าจะทำจริงหรือใส่ป้าย "เร็วๆ นี้"
+> ทำเสร็จครบทั้ง 5 ก้อนแล้ว
 
 - ✅ **ก้อน 1** — `Alert.alert` ของ react-native-web เป็นเมธอดว่าง (`static alert() {}`)
   ทำให้ Alert 11 จุดตายเงียบบนเว็บ **ปุ่มลบที่อยู่กับปุ่มล้างแคชตายสนิท** เพราะโค้ดจริงอยู่ใน callback
@@ -95,14 +107,25 @@ guest เข้าดูสินค้าได้/ออกจากโหม�
   `onOptions` เลย → default `showOptions` เป็น `false` + render เมื่อ `showOptions && onOptions`
 - ✅ **ก้อน 3** — ที่อยู่บนหัว Home เคย hardcode → ดึงจาก `addressesApi` จริง + กดไปหน้า `/addresses` ได้
   (`top-bar.tsx` เพิ่ม `onAddressPress?` ใน `HomeProps`) · จำนวนคูปองในโปรไฟล์ดึงจาก `couponsApi` จริง
+- ✅ **ก้อน 4** — ธีมมืดใช้งานจริงทั้งแอปด้วย `LightBrand`/`DarkBrand`, `ThemeProvider`,
+  `useStyles(makeStyles)` และ `useBrand()` · แจ้งเตือนโปรโมชันกรองจริงตาม `notifyPromo` ·
+  ภาษายังเป็นเฟส i18n ถัดไป จึงปิดชิปและติดป้าย "เร็วๆ นี้"
 - ✅ **ก้อน 5** — `settings.tsx` logout → `/(auth)/welcome` · `isAdminSession` ย้ายเข้า `useMemo` ·
   `Pressable` → `PressableScale` 9 จุด (กฎเหล็กข้อ 4)
 
 ### ⚠️ ข้อจำกัดที่รู้อยู่
 
+- **Pagination: ตัดสินใจไม่ทำฝั่งแอป (2026-08-27)** — `server/routes/products.js` รองรับ
+  `?q=&category=&brand=&minPrice=&sort=&page=&limit=` ครบแล้ว แต่ `src/api/catalog.ts` ยิง
+  `/products?limit=100` ดึงทั้งหมดครั้งเดียว แล้ว `products.tsx` กรอง/เรียงในเครื่อง
+  **เหตุผล:** แคตตาล็อกมี 12 รายการ (limit ปกติ 20) → ไม่มีทางเลื่อนถึงหน้า 2 ·
+  และถ้าย้าย pagination ไป server ต้องย้าย filter/sort/search ไปด้วยทั้งหมด (ไม่งั้นตัวกรองจะกรอง
+  เฉพาะหน้าที่โหลดมาแล้ว) ซึ่งจะทำให้ `products.tsx` หลุดจากห่วงโซ่ fallback
+  API → GitHub → bundled ที่ทำไว้ · **เป็นการตัดสินใจ ไม่ใช่งานที่ลืมทำ**
+  ถ้าสินค้าเกิน ~50 รายการเมื่อไหร่ค่อยทำ — แผนละเอียดอยู่ใน `PLAN_partD.md` ด่าน 4
+
 - guest mode ไม่ persist ลง secureStorage โดยตั้งใจ → refresh บนเว็บจะเด้งกลับหน้า welcome ทุกครั้ง
-- **ธีม/ภาษา/แจ้งเตือนโปรฯ ในหน้าตั้งค่า บันทึกลง DB ได้จริง แต่ไม่มีผลกับแอปเลย**
-  (ไม่มี dark mode จริง · ไม่มี i18n · ไม่มี push) ← ก้อน 4 ใน `CLEANUP_PLAN.md`
+- **ภาษา** ยังไม่มีระบบ i18n — ชิปภาษา disabled และติดป้าย "เร็วๆ นี้" ไว้ตรงไปตรงมา
 - เหรียญในโปรไฟล์ + เวลานับถอยหลัง Flash Sale เป็นค่าตกแต่ง ติด `// TODO(fake-data):` กำกับไว้แล้ว
 - `Pressable` เปล่ายังเหลืออีก 8 จุด (search, address-card, filter-sheet, section-header) — ปุ่มรอง ไม่เร่ง
 - toast บน native ชิดขอบจอ ไม่มีระยะห่าง 16px (บนเว็บถูกต้องแล้ว)
@@ -114,27 +137,38 @@ guest เข้าดูสินค้าได้/ออกจากโหม�
 ## ❌ ยังไม่ได้ทำ — Phase 2 (แผนเต็มอยู่ใน `Phase1.md`)
 
 ### 🐛 บั๊กที่รู้แล้ว ยังไม่แก้
-| ไฟล์ | บรรทัด | อาการ |
-|------|--------|-------|
-| `src/app/(tabs)/cart.tsx` | 69 | `<SkeletonImage>` ไม่ได้ส่ง `uri` → รูปสินค้าในตะกร้าเป็นกล่องเทาเสมอ **(แก้ง่าย ทำก่อนได้เลย)** |
+
+- ไม่มีรายการค้างในขณะนี้
 
 ### ปุ่มที่ยัง "กดไม่ได้"
-| ไฟล์ | บรรทัด | อาการ |
-|------|--------|-------|
-| `src/app/(tabs)/index.tsx` | 36–37 | `onSettings` / `onNotification` = `() => {}` |
-| `src/app/(tabs)/index.tsx` | 51 | search bar กดแล้วไปหน้า products แต่ **ไม่มีช่องพิมพ์ ไม่มีการค้นหาจริง** |
-| `src/app/(tabs)/cart.tsx` | 34 | แถบที่อยู่จัดส่งกดไม่ได้ |
-| `src/app/(tabs)/cart.tsx` | 97 | ปุ่ม "ชำระเงิน" ไม่มี `onPress` |
-| `src/app/(tabs)/profile.tsx` | 53 | เมนู 5 ข้อไม่มี `onPress` + ชื่อ/อีเมล hardcode |
-| `src/app/product/[id].tsx` | 120 | ปุ่ม info (ผ่อนชำระ) ไม่มี handler |
-| `src/components/shop/top-bar.tsx` | `FloatingHeader` | ปุ่ม share ไม่มี handler |
-| `src/app/products.tsx` | 12–35 | filter chips ทำได้แค่ sort · **ไม่มี field `brand` ใน data** · ไม่รับ query ค้นหา |
+
+- **ไม่มีแล้ว** — ตารางเดิมเป็นของยุค Phase 1 ทั้งหมดถูกแก้ไปแล้วใน PART C + Cleanup 5 ก้อน
+  (ตรวจซ้ำ 2026-08-27: `onSettings`/`onNotification`, search bar, แถบที่อยู่, ปุ่มชำระเงิน,
+  เมนูโปรไฟล์, ปุ่มผ่อนชำระ, ปุ่มแชร์, filter chips ใช้งานได้จริงครบทุกตัว)
+  รายละเอียดผลตรวจอยู่ใน `CLEANUP_PLAN.md`
 
 ### ✅ PART D ก้อนที่ 1 — Error Boundary + Offline Handling
 - `src/components/error-boundary.tsx` — class error boundary พร้อม fallback ภาษาไทยและปุ่มลองใหม่
 - `src/hooks/use-network-status.ts` — subscribe สถานะเครือข่ายผ่าน NetInfo
 - `src/components/shop/offline-banner.tsx` — แถบแจ้งออฟไลน์ที่แสดงทุกหน้า
 - `src/app/_layout.tsx` — ครอบทั้งแอปด้วย ErrorBoundary และวาง OfflineBanner เหนือ Stack
+
+### ✅ PART D ส่วนที่เหลือ ด่าน 1 — Validation
+- `src/app/addresses/edit.tsx:53` — normalize และตรวจเบอร์โทร 9–10 หลักขึ้นต้นด้วย 0 ·
+  รหัสไปรษณีย์ปล่อยว่างได้หรือเป็นตัวเลข 5 หลัก · จำกัด keyboard/maxLength ก่อนยิง API
+- `src/app/(auth)/register.tsx:35` — ตรวจรูปแบบอีเมลด้วย regex ก่อนสมัคร โดยคงกฎรหัสผ่านเดิม
+
+### ✅ PART D ส่วนที่เหลือ ด่าน 2 — Pull-to-refresh
+- `src/app/(tabs)/index.tsx:72` — refresh catalog พร้อมโหลดแจ้งเตือน/ที่อยู่บนหัว Home ซ้ำ
+- `src/app/products.tsx:53` — refresh catalog โดยผูก spinner กับ `catalog.loading`
+- `src/app/orders/index.tsx:57` และ `src/app/notifications.tsx:47` — โหลด API ซ้ำและปิด spinner ใน `finally`
+- ทั้ง 4 หน้าใช้ `Brand.text` กับ `tintColor` และ `colors` เพื่อให้มองเห็นทั้งธีมสว่าง/มืด
+
+### ✅ PART D ส่วนที่เหลือ ด่าน 3 — Accessibility
+- `<PressableScale>` ที่มีข้อความชัดเจนใช้ `accessibilityRole="button"` โดยไม่ใส่ label ซ้ำ
+- การ์ด แถวเมนู แถบค้นหา และชิปตัวกรองใช้ role พร้อม label ภาษาไทยที่บอกการกระทำ
+- `src/components/shop/product-card.tsx:32` และ `heart-button.tsx:46` มี label แบบไดนามิกจากรอบแรก
+- ตรวจ `src/app/` และ `src/components/` ด้วย AST แล้วเหลือ 0 จุดที่ไม่มี accessibility prop
 
 ### ระบบที่ยังไม่มีเลย
 Backend (Express + MySQL) · ระบบสมาชิก (JWT) · ที่อยู่จัดส่ง · คำสั่งซื้อ/ประวัติ ·
@@ -336,9 +370,9 @@ ALTER TABLE orders ADD COLUMN coupon_code VARCHAR(40) NULL AFTER discount;
 
 ---
 
-## 🛠️ แอดมิน: เพิ่ม/แก้ไข/ลบสินค้า (2026-08-06) — เขียนโค้ดเสร็จแล้ว `tsc --noEmit` ผ่าน 0 error
+## 🛠️ แอดมิน: เพิ่ม/แก้ไข/ลบสินค้า (2026-08-06) — `tsc --noEmit` ผ่าน 0 error
 
-**⚠️ ยังไม่ได้ทดสอบจริงบนแอป** — ต้องรัน SQL เพิ่ม + deploy backend ก่อน (ดูข้อ "ขั้นต่อไป" ด้านล่าง)
+**✅ ทดสอบจริงบนแอปกับ DB จริงผ่านแล้ว (2026-08-27)** — เพิ่ม/แก้ไข/ลบสินค้าใช้งานได้ครบ
 
 ก่อนหน้านี้สินค้าในแอปเป็น read-only ทั้งหมด — เพิ่มความสามารถให้ **แอดมินเท่านั้น** เพิ่ม/แก้ไขสินค้าได้
 ผ่านหน้าใหม่แยก `/admin/*` รูปภาพกรอกเป็น URL (ไม่ทำ image upload)
@@ -515,7 +549,9 @@ Router typed-routes codegen (`.expo/types/router.d.ts`) ไม่ยอมรว
 |------|---------|
 | `AGENTS.md` | กฎการทำงาน (โหลดอัตโนมัติทุก session ผ่าน `CLAUDE.md`) |
 | `PROGRESS.md` | ไฟล์นี้ — บันทึกความคืบหน้า |
-| `CLEANUP_PLAN.md` | **ผลตรวจ "ปุ่ม/ระบบที่มีอยู่แต่ใช้จริงไม่ได้" (2026-08-13) + prompt พร้อมส่ง Codex 5 ก้อน** |
+| `CLEANUP_PLAN.md` | ผลตรวจ "ปุ่ม/ระบบที่มีอยู่แต่ใช้จริงไม่ได้" (2026-08-13) — ✅ เก็บครบ 5/5 ก้อนแล้ว |
+| `PLAN_batch4_theme.md` | แผนธีมมืด + ตั้งค่าใช้งานจริง — ✅ เสร็จครบ 4/4 ด่าน (2026-08-27) |
+| `PLAN_partD.md` | แผน PART D ที่เหลือ — ✅ ด่าน 1-3 เสร็จ · ด่าน 4 (pagination) ข้ามโดยตั้งใจ |
 | `Phase1_UI_prompt.md` | โจทย์ตั้งต้น Phase 1 (UI) — ทำเสร็จแล้ว |
 | `Phase1.md` | แผน Phase 2 (backend + ทำให้ใช้งานได้จริง) — ยังไม่เริ่ม |
 | `รายงาน_3ส่วนUI.md` | เอกสารประกอบรายงานส่งอาจารย์ (Header / Detail / Bottom Tab) |

@@ -9,7 +9,8 @@ import {
 } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 
-import { AppFrameWidth, Brand, PixelBorder, PixelFonts } from '@/constants/theme';
+import { AppFrameWidth, PixelBorder, PixelFonts, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 
 interface ToastContextValue {
   showToast: (message: string) => void;
@@ -18,6 +19,7 @@ interface ToastContextValue {
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const styles = useStyles(makeStyles);
   const [message, setMessage] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -60,7 +62,7 @@ export function useToast(): ToastContextValue {
   return context;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   provider: {
     flex: 1,
     width: '100%',

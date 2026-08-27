@@ -31,14 +31,16 @@ import { SkeletonImage } from '@/components/shop/skeleton-image';
 import { FloatingHeader } from '@/components/shop/top-bar';
 import {
   AppFrameWidth,
-  Brand,
   PixelBorder,
   PixelFonts,
   PixelShadow,
   Radius,
+  type BrandPalette,
 } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useCatalog } from '@/store/catalog-store';
 import { useShop } from '@/store/shop-store';
+import { useBrand } from '@/store/theme-store';
 import { formatBaht } from '@/utils/format';
 
 // Gallery page width follows the device width, but is capped to the app frame
@@ -47,6 +49,8 @@ const windowWidth = Dimensions.get('window').width;
 const width = Platform.OS === 'web' ? Math.min(windowWidth, AppFrameWidth) : windowWidth;
 
 export default function ProductDetailScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -62,7 +66,7 @@ export default function ProductDetailScreen() {
     return (
       <View style={styles.notFound}>
         <Text style={styles.notFoundText}>ไม่พบสินค้า</Text>
-        <PressableScale onPress={() => router.back()}>
+        <PressableScale accessibilityRole="button" onPress={() => router.back()}>
           <Text style={styles.backLink}>ย้อนกลับ</Text>
         </PressableScale>
       </View>
@@ -167,7 +171,10 @@ export default function ProductDetailScreen() {
           <Text style={styles.description} numberOfLines={expanded ? undefined : 2}>
             {product.description}
           </Text>
-          <PressableScale onPress={() => setExpanded((v) => !v)} hitSlop={8}>
+          <PressableScale
+            accessibilityRole="button"
+            onPress={() => setExpanded((v) => !v)}
+            hitSlop={8}>
             <Text style={styles.readMore}>{expanded ? 'ย่อลง' : 'อ่านเพิ่มเติม'}</Text>
           </PressableScale>
 
@@ -221,6 +228,7 @@ export default function ProductDetailScreen() {
       {/* Sticky add-to-cart */}
       <View style={[styles.sticky, { paddingBottom: insets.bottom + 12 }]}>
         <PressableScale
+          accessibilityRole="button"
           style={[styles.cartButton, !product.inStock && styles.cartButtonDisabled]}
           pixelShadow={product.inStock ? PixelShadow.sm : undefined}
           onPress={() => {
@@ -249,6 +257,7 @@ export default function ProductDetailScreen() {
                 ยอดผ่อนต่อเดือนที่แสดงเป็นการประมาณการจากราคาสินค้าปัจจุบัน เงื่อนไขเป็นไปตามที่ธนาคารกำหนด
               </Text>
               <PressableScale
+                accessibilityRole="button"
                 style={styles.infoCloseButton}
                 pixelShadow={PixelShadow.sm}
                 onPress={() => setInfoVisible(false)}>
@@ -271,6 +280,8 @@ function SpecRow({
   label: string;
   value: string;
 }) {
+  const styles = useStyles(makeStyles);
+
   return (
     <View style={styles.specRow}>
       <View style={styles.specLabel}>
@@ -282,7 +293,7 @@ function SpecRow({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

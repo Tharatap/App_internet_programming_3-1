@@ -2,7 +2,8 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PixelPanel } from '@/components/shop/pixel-panel';
 import { PressableScale } from '@/components/shop/pressable-scale';
-import { Brand, PixelBorder, PixelFonts, Radius } from '@/constants/theme';
+import { PixelBorder, PixelFonts, Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 
 interface Props {
   visible: boolean;
@@ -25,6 +26,8 @@ export function ConfirmModal({
   onCancel,
   onConfirm,
 }: Props) {
+  const styles = useStyles(makeStyles);
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <Pressable style={styles.backdrop} onPress={onCancel}>
@@ -34,10 +37,14 @@ export function ConfirmModal({
             <Text style={styles.title}>{title}</Text>
             {message ? <Text style={styles.message}>{message}</Text> : null}
             <View style={styles.buttonRow}>
-              <PressableScale style={styles.cancelButton} onPress={onCancel}>
+              <PressableScale
+                accessibilityRole="button"
+                style={styles.cancelButton}
+                onPress={onCancel}>
                 <Text style={styles.cancelText}>{cancelText}</Text>
               </PressableScale>
               <PressableScale
+                accessibilityRole="button"
                 style={[styles.confirmButton, destructive && styles.destructiveButton]}
                 onPress={onConfirm}>
                 <Text
@@ -53,7 +60,7 @@ export function ConfirmModal({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   backdrop: {
     flex: 1,
     alignItems: 'center',

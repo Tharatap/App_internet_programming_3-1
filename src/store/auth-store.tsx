@@ -10,6 +10,7 @@ import {
 
 import { ApiError } from '@/api/client';
 import { authApi, ApiUser } from '@/api/auth';
+import { usersApi } from '@/api/users';
 import { secureStorage } from '@/utils/secure-storage';
 
 const TOKEN_KEY = 'chaje_auth_token';
@@ -31,6 +32,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   enterGuestMode: () => void;
   exitGuestMode: () => void;
+  updateSettings: (patch: Partial<ApiUser['settings']>) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -114,6 +116,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const enterGuestMode = useCallback(() => setIsGuest(true), []);
   const exitGuestMode = useCallback(() => setIsGuest(false), []);
+  const updateSettings = useCallback((patch: Partial<ApiUser['settings']>) => {
+    setUser((prev) => prev
+      ? { ...prev, settings: { ...prev.settings, ...patch } }
+      : prev);
+    if (token) {
+      void usersApi.updateSettings(token, patch).catch(() => {});
+    }
+  }, [token]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -129,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       enterGuestMode,
       exitGuestMode,
+      updateSettings,
     }),
     [
       user,
@@ -141,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       enterGuestMode,
       exitGuestMode,
+      updateSettings,
     ]
   );
 

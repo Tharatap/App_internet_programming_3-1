@@ -2,7 +2,9 @@ import { Minus, Plus } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/shop/pressable-scale';
-import { Brand, PixelBorder, PixelFonts, PixelShadow } from '@/constants/theme';
+import { PixelBorder, PixelFonts, PixelShadow, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
+import { useBrand } from '@/store/theme-store';
 
 interface Props {
   quantity: number;
@@ -13,6 +15,8 @@ interface Props {
 
 /** −/＋ pixel stepper with square buttons and a value in the middle. */
 export function QuantityStepper({ quantity, onChange, min = 1, max = 99 }: Props) {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const dec = () => onChange(Math.max(min, quantity - 1));
   const inc = () => onChange(Math.min(max, quantity + 1));
 
@@ -37,7 +41,7 @@ export function QuantityStepper({ quantity, onChange, min = 1, max = 99 }: Props
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',

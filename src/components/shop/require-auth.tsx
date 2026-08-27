@@ -4,8 +4,10 @@ import { type ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/shop/pressable-scale';
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
+import { useBrand } from '@/store/theme-store';
 
 interface Props {
   children: ReactNode;
@@ -19,6 +21,8 @@ interface Props {
  * authenticated. Used by cart/favorites/profile — screens that need a user.
  */
 export function RequireAuth({ children, title }: Props) {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const router = useRouter();
   const { loading, isAuthenticated } = useAuth();
 
@@ -38,7 +42,10 @@ export function RequireAuth({ children, title }: Props) {
         </View>
         <Text style={styles.title}>{title ? `เข้าสู่ระบบเพื่อดู${title}` : 'กรุณาเข้าสู่ระบบ'}</Text>
         <Text style={styles.subtitle}>เข้าสู่ระบบเพื่อใช้งานส่วนนี้ของแอป</Text>
-        <PressableScale style={styles.button} onPress={() => router.push('/(auth)/login')}>
+        <PressableScale
+          accessibilityRole="button"
+          style={styles.button}
+          onPress={() => router.push('/(auth)/login')}>
           <Text style={styles.buttonText}>เข้าสู่ระบบ</Text>
         </PressableScale>
       </View>
@@ -48,7 +55,7 @@ export function RequireAuth({ children, title }: Props) {
   return <>{children}</>;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   center: {
     flex: 1,
     alignItems: 'center',

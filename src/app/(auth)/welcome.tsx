@@ -4,10 +4,14 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PressableScale } from '@/components/shop/pressable-scale';
-import { Brand, PixelBorder, Radius } from '@/constants/theme';
+import { PixelBorder, Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
 import { useAuth } from '@/store/auth-store';
+import { useBrand } from '@/store/theme-store';
 
 export default function WelcomeScreen() {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { enterGuestMode } = useAuth();
@@ -35,6 +39,8 @@ export default function WelcomeScreen() {
 
       <View style={styles.actions}>
         <PressableScale
+          accessibilityRole="button"
+          accessibilityLabel="เข้าสู่ระบบ"
           style={[styles.card, styles.primaryCard]}
           onPress={() => router.push('/(auth)/login')}>
           <View style={styles.iconBox}>
@@ -47,6 +53,8 @@ export default function WelcomeScreen() {
         </PressableScale>
 
         <PressableScale
+          accessibilityRole="button"
+          accessibilityLabel="สมัครสมาชิก"
           style={styles.card}
           onPress={() => router.push('/(auth)/register')}>
           <View style={[styles.iconBox, styles.registerIcon]}>
@@ -58,7 +66,11 @@ export default function WelcomeScreen() {
           </View>
         </PressableScale>
 
-        <PressableScale style={styles.card} onPress={continueAsGuest}>
+        <PressableScale
+          accessibilityRole="button"
+          accessibilityLabel="เข้าชมแบบผู้เยี่ยมชม"
+          style={styles.card}
+          onPress={continueAsGuest}>
           <View style={[styles.iconBox, styles.guestIcon]}>
             <ShoppingBag size={24} color={Brand.text} strokeWidth={2} />
           </View>
@@ -69,6 +81,8 @@ export default function WelcomeScreen() {
         </PressableScale>
 
         <PressableScale
+          accessibilityRole="button"
+          accessibilityLabel="เข้าสู่ระบบแอดมิน"
           style={[styles.card, styles.adminCard]}
           onPress={() => router.push('/(auth)/login?intent=admin')}>
           <View style={[styles.iconBox, styles.adminIcon]}>
@@ -84,7 +98,7 @@ export default function WelcomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Brand.background,

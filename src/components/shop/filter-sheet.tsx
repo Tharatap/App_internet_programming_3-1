@@ -4,7 +4,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Checkbox } from '@/components/shop/checkbox';
 import { PressableScale } from '@/components/shop/pressable-scale';
-import { Brand, Radius } from '@/constants/theme';
+import { Radius, type BrandPalette } from '@/constants/theme';
+import { useStyles } from '@/hooks/use-styles';
+import { useBrand } from '@/store/theme-store';
 
 export type PriceRange = 'all' | 'under1000' | '1000to5000' | '5000to10000' | 'over10000';
 
@@ -44,6 +46,8 @@ interface Props {
 
 /** Bottom sheet for advanced filtering: brand, price range, energy rating, stock. */
 export function FilterSheet({ visible, onClose, brands, value, onChange, resultCount }: Props) {
+  const styles = useStyles(makeStyles);
+  const Brand = useBrand();
   const insets = useSafeAreaInsets();
 
   return (
@@ -123,7 +127,10 @@ export function FilterSheet({ visible, onClose, brands, value, onChange, resultC
           <Pressable onPress={() => onChange(defaultFilterValue)} style={styles.clearButton}>
             <Text style={styles.clearText}>ล้างตัวกรอง</Text>
           </Pressable>
-          <PressableScale style={styles.applyButton} onPress={onClose}>
+          <PressableScale
+            accessibilityRole="button"
+            style={styles.applyButton}
+            onPress={onClose}>
             <Text style={styles.applyText}>ดูผลลัพธ์ ({resultCount})</Text>
           </PressableScale>
         </View>
@@ -141,6 +148,8 @@ function Chip({
   selected: boolean;
   onPress: () => void;
 }) {
+  const styles = useStyles(makeStyles);
+
   return (
     <Pressable onPress={onPress} style={[styles.chip, selected && styles.chipSelected]}>
       <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
@@ -148,7 +157,7 @@ function Chip({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
