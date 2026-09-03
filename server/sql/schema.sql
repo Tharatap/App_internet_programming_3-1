@@ -16,6 +16,13 @@
 SET NAMES utf8mb4;
 
 -- ------------------------------------------------------------
+-- ถ้ารันบนเครื่องตัวเอง (XAMPP / MySQL ที่ลงเอง) ให้เอา comment 2 บรรทัดนี้ออกก่อน
+-- เพื่อสร้าง database ใหม่ — บนเซิร์ฟเวอร์ของอาจารย์ไม่ต้อง เพราะ DB ถูกสร้างมาให้แล้ว
+-- ------------------------------------------------------------
+-- CREATE DATABASE IF NOT EXISTS ip_std6730202645 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- USE ip_std6730202645;
+
+-- ------------------------------------------------------------
 -- ผู้ใช้งาน
 -- ⚠️ ถ้า database มีตาราง users อยู่แล้ว (สร้างก่อนเพิ่มคอลัมน์ is_admin)
 --    ต้องรันเองใน phpMyAdmin:
@@ -210,6 +217,8 @@ CREATE TABLE IF NOT EXISTS coupons (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
---  ตรวจผล: ต้องเห็น 11 ตาราง
+--  ตรวจผล: ต้องเห็น 12 ตาราง
 --  SHOW TABLES;
+--  users, categories, products, product_images, product_branch_stock,
+--  addresses, cart_items, favorites, orders, order_items, notifications, coupons
 -- ============================================================

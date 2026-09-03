@@ -9,13 +9,13 @@
 
 SET NAMES utf8mb4;
 
--- ล้างข้อมูลเดิมเพื่อให้รันซ้ำได้ (ไม่แตะตาราง users/orders)
-SET FOREIGN_KEY_CHECKS = 0;
-TRUNCATE TABLE product_images;
-TRUNCATE TABLE product_branch_stock;
-TRUNCATE TABLE products;
-TRUNCATE TABLE categories;
-SET FOREIGN_KEY_CHECKS = 1;
+-- ล้างข้อมูลเดิมเพื่อให้รันซ้ำได้ (ไม่ลบ orders/order_items เพราะเป็นประวัติการสั่งซื้อ)
+-- ⚠️ ใช้ DELETE ไม่ใช่ TRUNCATE: TRUNCATE ต้องมีสิทธิ์ DROP ซึ่ง user ของ DB บนเซิร์ฟเวอร์เรียน
+--    มักไม่มี (จะเจอ error #1142 แบบเดียวกับ REFERENCES) ส่วน DELETE ใช้แค่สิทธิ์ DELETE
+DELETE FROM product_images;
+DELETE FROM product_branch_stock;
+DELETE FROM products;
+DELETE FROM categories;
 
 -- ---------- หมวดหมู่ (7 รายการ) ----------
 INSERT INTO categories (id, name, icon) VALUES
@@ -126,9 +126,42 @@ INSERT INTO product_branch_stock (product_id, branch_code, branch_name, in_stock
 -- ---------- คูปองตัวอย่าง ----------
 DELETE FROM coupons;
 INSERT INTO coupons (code, title, discount_type, discount_value, min_spend, expires_at) VALUES
-  ('WELCOME100', 'ส่วนลด 100 บาท สำหรับลูกค้าใหม่', 'amount', 100, 1000, '2026-12-31'),
-  ('SAVE10', 'ลด 10% สูงสุด 500 บาท', 'percent', 10, 2000, '2026-12-31'),
-  ('FREESHIP', 'ส่งฟรีสำหรับสินค้าชิ้นใหญ่', 'amount', 150, 500, '2026-12-31');
+  ('WELCOME100', 'ส่วนลด 100 บาท สำหรับลูกค้าใหม่', 'amount', 100, 1000, '2030-12-31'),
+  ('SAVE10', 'ลด 10% สูงสุด 500 บาท', 'percent', 10, 2000, '2030-12-31'),
+  ('FREESHIP', 'ส่งฟรีสำหรับสินค้าชิ้นใหญ่', 'amount', 150, 500, '2030-12-31');
+
+-- ---------- บัญชีผู้ใช้ตัวอย่าง (สำหรับทดสอบ / ไม่ต้องสมัครใหม่) ----------
+--  admin@chaje.test / admin123   → เป็นแอดมิน เพิ่ม-แก้-ลบสินค้าได้
+--  user@chaje.test  / user1234   → ลูกค้าทั่วไป
+--  password_hash เป็น bcrypt cost 10 (ตรงกับที่ routes/auth.js ใช้ตอน login)
+--  ⚠️ เป็นบัญชีสาธิตเท่านั้น ถ้าเอาขึ้นใช้งานจริงให้ลบทิ้งหรือเปลี่ยนรหัสผ่าน
+--  ใช้ ON DUPLICATE KEY เพื่อให้รันไฟล์นี้ซ้ำได้โดยไม่ชน UNIQUE ของ email
+INSERT INTO users (email, password_hash, name, language, theme, notify_promo, is_admin) VALUES
+  ('admin@chaje.test', '$2b$10$27akAvZe6yi0sQcWL94uTOe0f81wqmH7EbOW7PHksW3.MujJn0GhW', 'ผู้ดูแลระบบ', 'th', 'light', 1, 1),
+  ('user@chaje.test',  '$2b$10$YAxu7JI7.DC8SSbRZv/Nku1ssFecAeNDodUbA5hPzLbLuEYzteRWW', 'ลูกค้าทดสอบ',  'th', 'light', 1, 0)
+ON DUPLICATE KEY UPDATE
+  password_hash = VALUES(password_hash),
+  name          = VALUES(name),
+  is_admin      = VALUES(is_admin);
+
+-- ---------- ที่อยู่จัดส่งตัวอย่างของบัญชีลูกค้า ----------
+-- ใช้ SELECT หา user_id เอา เพราะ id เป็น AUTO_INCREMENT (เลขไม่แน่นอน)
+DELETE FROM addresses
+ WHERE user_id IN (SELECT id FROM users WHERE email IN ('admin@chaje.test', 'user@chaje.test'));
+
+INSERT INTO addresses (user_id, label, recipient, phone, line1, district, province, postcode, is_default)
+SELECT id, 'บ้าน', 'ลูกค้าทดสอบ', '0812345678',
+       '99/1 ถนนสุขุมวิท ซอย 22', 'คลองเตย', 'กรุงเทพมหานคร', '10110', 1
+  FROM users WHERE email = 'user@chaje.test';
+
+-- ---------- แจ้งเตือนต้อนรับ ----------
+DELETE FROM notifications
+ WHERE user_id IN (SELECT id FROM users WHERE email IN ('admin@chaje.test', 'user@chaje.test'));
+
+INSERT INTO notifications (user_id, title, body, type)
+SELECT id, 'ยินดีต้อนรับสู่ Chaje Electric',
+       'รับคูปองส่วนลด 100 บาทสำหรับลูกค้าใหม่ ใช้โค้ด WELCOME100', 'promo'
+  FROM users WHERE email IN ('admin@chaje.test', 'user@chaje.test');
 
 -- ============================================================
 --  ตรวจผล
@@ -136,5 +169,7 @@ INSERT INTO coupons (code, title, discount_type, discount_value, min_spend, expi
 --  SELECT COUNT(*) FROM categories;            -- ต้องได้ 7
 --  SELECT COUNT(*) FROM product_images;        -- ต้องได้ 23
 --  SELECT COUNT(*) FROM product_branch_stock;  -- ต้องได้ 48
+--  SELECT COUNT(*) FROM coupons;               -- ต้องได้ 3
+--  SELECT email, is_admin FROM users;          -- ต้องเห็น admin@chaje.test (is_admin = 1)
 --  SELECT id, name, brand FROM products LIMIT 5;  -- ภาษาไทยต้องไม่เป็น ???
 -- ============================================================

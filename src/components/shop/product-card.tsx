@@ -14,15 +14,21 @@ import { formatBaht } from '@/utils/format';
 interface Props {
   product: Product;
   variant?: 'grid' | 'row';
-  /** Stagger index for the entrance animation. */
+  /** ลำดับของการ์ดในลิสต์ ใช้หน่วงเวลาแอนิเมชันตอนเข้าจอทีละใบ (stagger effect) */
   index?: number;
 }
 
-/** Reusable product card. `grid` = tall 2-column card, `row` = horizontal list. */
+/**
+ * การ์ดสินค้าที่ใช้ซ้ำทั่วแอป — มี 2 รูปแบบ
+ * `grid` = การ์ดแนวตั้ง 2 คอลัมน์ (หน้า Home/แคตตาล็อก)
+ * `row`  = การ์ดแนวนอนเต็มแถว (หน้าค้นหา)
+ */
 export function ProductCard({ product, variant = 'grid', index = 0 }: Props) {
   const styles = useStyles(makeStyles);
   const router = useRouter();
   const open = () => router.push(`/product/${product.id}`);
+  // จำกัดดีเลย์ไว้ที่ 8 ตัวแรก (index สูงสุด = 8) กันไม่ให้การ์ดท้ายๆ ในลิสต์ยาว
+  // ต้องรอแอนิเมชันนานเกินไปกว่าจะปรากฏ
   const entering = FadeInDown.duration(300).delay(Math.min(index, 8) * 60);
 
   if (variant === 'row') {
@@ -51,6 +57,7 @@ export function ProductCard({ product, variant = 'grid', index = 0 }: Props) {
             <PriceRow product={product} />
           </View>
         </PressableScale>
+        {/* ปุ่มหัวใจลอยทับมุมขวาบน แยกจาก PressableScale เพื่อไม่ให้กดแล้วเด้งไปหน้ารายละเอียด */}
         <View style={styles.rowHeart}>
           <HeartButton productId={product.id} size={18} />
         </View>
@@ -89,6 +96,7 @@ export function ProductCard({ product, variant = 'grid', index = 0 }: Props) {
   );
 }
 
+/** แสดงราคาปัจจุบัน + ราคาเดิม (ขีดฆ่า) ถ้าสินค้ามีการลดราคา */
 function PriceRow({ product }: { product: Product }) {
   const styles = useStyles(makeStyles);
 

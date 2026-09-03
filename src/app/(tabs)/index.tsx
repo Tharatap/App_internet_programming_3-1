@@ -136,6 +136,7 @@ export default function HomeScreen() {
               accessibilityLabel="ค้นหาสินค้า"
               style={styles.search}
               pixelShadow={PixelShadow.sm}
+              /*function เอาไว้ serach product  router เอาไว้ serach */
               onPress={() => router.push('/search')}>
               <Search size={18} color={Brand.textMuted} strokeWidth={2.5} />
               <Text style={styles.searchPlaceholder}>ค้นหาสินค้าเครื่องใช้ไฟฟ้า</Text>

@@ -1,3 +1,4 @@
+// search
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Search, X } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';

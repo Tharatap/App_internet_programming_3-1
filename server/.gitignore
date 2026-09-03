@@ -1,4 +1,8 @@
 node_modules/
 .env
 *.log
-uploads/
+
+# โฟลเดอร์รูปที่แอดมินอัปโหลด — ไม่ commit ไฟล์รูป แต่ commit โฟลเดอร์ไว้
+# (ไม่งั้น clone มาแล้วอัปโหลดรูปไม่ได้ เพราะ routes/uploads.js เขียนลงโฟลเดอร์นี้)
+uploads/*
+!uploads/.gitkeep

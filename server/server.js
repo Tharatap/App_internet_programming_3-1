@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
 const path = require('path');
 
 const { errorHandler } = require('./middleware/error');
@@ -13,7 +14,12 @@ app.use(express.json({ limit: '6mb' }));
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// สร้างโฟลเดอร์ uploads ถ้ายังไม่มี — clone repo มาใหม่จะยังไม่มีโฟลเดอร์นี้
+// (git ไม่เก็บโฟลเดอร์เปล่า) ถ้าไม่สร้าง routes/uploads.js จะพังตอนแอดมินอัปโหลดรูป
+const uploadsDir = path.join(__dirname, 'uploads');
+fs.mkdirSync(uploadsDir, { recursive: true });
+
+app.use('/uploads', express.static(uploadsDir));
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/products'));
