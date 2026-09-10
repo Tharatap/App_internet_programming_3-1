@@ -188,17 +188,53 @@ function centroidObjects(centroid, stats) {
   return { centroidZ, restored };
 }
 
-function clusterLabel(k, tierIndex, centroidZ) {
-  // คัด price ออกจากตัวเลือก "ลักษณะเด่น" เพราะชื่อระดับ (tier) มาจากราคาอยู่แล้ว
-  // ถ้าไม่คัด กลุ่มหัว-ท้ายจะได้ชื่อที่บอกข้อมูลเดียวกันสองรอบ เช่น "พรีเมียม · ราคาสูง"
-  const standout = Object.entries(centroidZ)
+/**
+ * ชื่อลักษณะเด่นเรียงตามระยะที่ centroid เบี่ยงจากค่ากลาง
+ * คัด price ออกเสมอ — ถ้าใช้ชื่อชั้นราคาอยู่แล้วจะกลายเป็นพูดซ้ำ ("พรีเมียม · ราคาสูง")
+ * และถ้าไม่ได้ใช้ชื่อชั้นราคา ก็เพราะราคาแยกกลุ่มไม่ได้จริงอยู่แล้ว
+ */
+const TRAIT_MIN_Z = 0.5;
+
+function standoutTraits(centroidZ, count) {
+  const ranked = Object.entries(centroidZ)
     .filter(([key]) => key !== 'price')
-    .reduce((best, current) =>
-      Math.abs(current[1]) > Math.abs(best[1]) ? current : best
-    );
-  const traits = FEATURE_TRAITS[standout[0]];
-  const trait = traits[standout[1] >= 0 ? 1 : 0];
-  return `${PRICE_TIERS[k][tierIndex]} · ${trait}`;
+    .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+  // เอ่ยถึงเฉพาะคุณลักษณะที่เบี่ยงจากค่ากลางมากพอ — สินค้าในร้านนี้คะแนนอยู่ในช่วง 4.1-4.8
+  // ทั้งหมด การเรียกกลุ่มที่ได้ 4.3 ว่า "คะแนนรีวิวต่ำ" ถูกในเชิงเปรียบเทียบแต่ผู้บริหาร
+  // จะอ่านเป็นค่าสัมบูรณ์แล้วเข้าใจผิด ถ้าไม่มีตัวไหนเด่นพอก็หยิบตัวที่เด่นสุดมาตัวเดียว
+  return ranked
+    .filter(([, z]) => Math.abs(z) >= TRAIT_MIN_Z)
+    .slice(0, count)
+    .map(([key, z]) => FEATURE_TRAITS[key][z >= 0 ? 1 : 0]);
+}
+
+/**
+ * ชั้นราคาจะถือว่า "แยกกันจริง" ก็ต่อเมื่อช่วงราคาของทุกชั้นไม่ทับกันเลย
+ *
+ * เกณฑ์นี้ไม่ได้ตั้งลอย ๆ แต่มาจากสิ่งที่ผู้ใช้เห็นบนการ์ด: ใต้ชื่อกลุ่มคือช่วงราคาของกลุ่มนั้น
+ * ถ้าช่วงทับกัน ผู้บริหารจะเห็นคำว่า "พรีเมียม" อยู่เหนือเลข 1,490 ในขณะที่ "ระดับกลาง"
+ * แสดง 4,290 ซึ่งขัดกับสายตาทันที และทำให้ไม่เชื่อถือทั้งหน้า
+ *
+ * ที่เกิดแบบนี้ได้เพราะเราจัดกลุ่มด้วย 5 คุณลักษณะที่น้ำหนักเท่ากัน ราคาจึงมีสิทธิ์ตัดสิน
+ * แค่ 1 ใน 5 แต่ชื่อชั้นกลับสัญญาว่าเรียงตามราคาล้วน — เมื่อโมเดลไม่ได้ทำตามที่ชื่อสัญญา
+ * ให้เลิกใช้ชื่อนั้นแทนที่จะฝืนใช้ต่อ
+ */
+function pricesFormCleanTiers(orderedRanges) {
+  for (let index = 1; index < orderedRanges.length; index += 1) {
+    if (orderedRanges[index].minPrice <= orderedRanges[index - 1].maxPrice) return false;
+  }
+  return true;
+}
+
+function clusterLabel(k, tierIndex, centroidZ, priceSeparated) {
+  if (priceSeparated) {
+    const [trait] = standoutTraits(centroidZ, 1);
+    return trait ? `${PRICE_TIERS[k][tierIndex]} · ${trait}` : PRICE_TIERS[k][tierIndex];
+  }
+  const traits = standoutTraits(centroidZ, 2);
+  // ไม่มีทั้งชั้นราคาและจุดเด่น = กลุ่มที่ค่าทุกด้านเกาะค่ากลาง ซึ่งเป็นข้อมูลที่ใช้ได้จริง
+  // (แปลว่ายังไม่ต้องรีบทำโปรโมชันกับกลุ่มนี้) ดีกว่าไปตั้งชื่อจากตัวเลขที่แทบไม่ต่างจากค่าเฉลี่ย
+  return traits.length > 0 ? traits.join(' · ') : 'ค่าเฉลี่ยกลาง ๆ ทุกด้าน';
 }
 
 function buildKpis(rows, clusterCount) {
@@ -273,15 +309,25 @@ function analyzeProductClusters(rows, requestedK) {
     .sort((a, b) => a.price - b.price);
   const tierById = new Map(tierOrder.map((cluster, index) => [cluster.id, index]));
 
+  const memberRowsById = selected.result.centroids.map((_, id) =>
+    rows.filter((__, index) => selected.result.assignments[index] === id)
+  );
+  const priceSeparated = pricesFormCleanTiers(
+    tierOrder.map(({ id }) => {
+      const prices = memberRowsById[id].map((row) => Number(row.price));
+      return { minPrice: Math.min(...prices), maxPrice: Math.max(...prices) };
+    })
+  );
+
   const clusters = selected.result.centroids.map((centroid, id) => {
-    const memberRows = rows.filter((_, index) => selected.result.assignments[index] === id);
+    const memberRows = memberRowsById[id];
     const summary = summarizeCluster(memberRows);
     const { centroidZ, restored } = centroidObjects(centroid, stats);
     const tierIndex = tierById.get(id);
     return {
       id,
       tierIndex,
-      label: clusterLabel(selected.k, tierIndex, centroidZ),
+      label: clusterLabel(selected.k, tierIndex, centroidZ, priceSeparated),
       color: CLUSTER_COLORS[tierIndex % CLUSTER_COLORS.length],
       size: memberRows.length,
       centroid: restored,
