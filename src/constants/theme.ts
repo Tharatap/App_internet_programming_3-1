@@ -167,6 +167,9 @@ export const CategoryPalette = [
   '#C9E4C5',
 ] as const;
 
+/** สีประจำกลุ่มใช้ชื่อ token เพื่อให้ server ส่งค่าเดียวกันได้ทั้ง light และ dark mode */
+export const ClusterPalette = ['skyBlue', 'mint', 'tan', 'saleBg', 'coin', 'orange'] as const;
+
 /**
  * Radii are intentionally 0 across the board — the pixel theme uses sharp
  * corners everywhere (circles are done with borderRadius: size / 2 directly

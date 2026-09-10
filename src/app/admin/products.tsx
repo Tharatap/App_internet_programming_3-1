@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { Plus, Trash2 } from 'lucide-react-native';
+import { useRouter, type Href } from 'expo-router';
+import { LayoutDashboard, Plus, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -94,13 +94,22 @@ export default function AdminProductsScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           ListHeaderComponent={
-            <PressableScale
-              accessibilityRole="button"
-              style={styles.addRow}
-              onPress={() => router.push('/admin/product-form')}>
-              <Plus size={18} color={Brand.onAccent} strokeWidth={2.5} />
-              <Text style={styles.addLabel}>เพิ่มสินค้าใหม่</Text>
-            </PressableScale>
+            <View style={styles.headerActions}>
+              <PressableScale
+                accessibilityRole="button"
+                style={styles.dashboardRow}
+                onPress={() => router.push('/admin/dashboard' as Href)}>
+                <LayoutDashboard size={18} color={Brand.text} strokeWidth={2.5} />
+                <Text style={styles.dashboardLabel}>แดชบอร์ดวิเคราะห์</Text>
+              </PressableScale>
+              <PressableScale
+                accessibilityRole="button"
+                style={styles.addRow}
+                onPress={() => router.push('/admin/product-form')}>
+                <Plus size={18} color={Brand.onAccent} strokeWidth={2.5} />
+                <Text style={styles.addLabel}>เพิ่มสินค้าใหม่</Text>
+              </PressableScale>
+            </View>
           }
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
@@ -127,7 +136,29 @@ const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
   },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  dashboardRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    backgroundColor: Brand.skyBlue,
+    borderWidth: PixelBorder.base,
+    borderColor: Brand.divider,
+    paddingVertical: 14,
+  },
+  dashboardLabel: {
+    fontSize: 12,
+    fontFamily: PixelFonts.headingBold,
+    color: Brand.text,
+  },
   addRow: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -136,7 +167,6 @@ const makeStyles = (Brand: BrandPalette) => StyleSheet.create({
     borderWidth: PixelBorder.base,
     borderColor: Brand.divider,
     paddingVertical: 14,
-    marginBottom: 16,
   },
   addLabel: {
     fontSize: 13,

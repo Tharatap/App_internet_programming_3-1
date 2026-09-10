@@ -1,9 +1,10 @@
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import {
   ChevronRight,
   Heart,
   LogIn,
   LogOut,
+  LayoutDashboard,
   MapPin,
   Package,
   Settings,
@@ -30,7 +31,7 @@ import { useBrand } from '@/store/theme-store';
 interface MenuItem {
   icon: LucideIcon;
   label: string;
-  href: '/orders' | '/addresses' | '/coupons' | '/(tabs)/favorites' | '/settings' | '/admin/products';
+  href: Href;
 }
 
 export default function ProfileScreen() {
@@ -73,7 +74,10 @@ export default function ProfileScreen() {
     { icon: Heart, label: 'รายการโปรด', href: '/(tabs)/favorites' },
     { icon: Settings, label: 'ตั้งค่า', href: '/settings' },
     ...(isAdminSession
-      ? [{ icon: ShieldCheck, label: 'จัดการสินค้า', href: '/admin/products' } as MenuItem]
+      ? [
+          { icon: LayoutDashboard, label: 'แดชบอร์ดวิเคราะห์', href: '/admin/dashboard' as Href },
+          { icon: ShieldCheck, label: 'จัดการสินค้า', href: '/admin/products' },
+        ] satisfies MenuItem[]
       : []),
   ];
 

@@ -31,6 +31,7 @@ app.use('/api/orders', require('./routes/orders'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/coupons', require('./routes/coupons'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/uploads', require('./routes/uploads'));
 
 app.use((req, res) => res.status(404).json({ message: 'ไม่พบ endpoint นี้' }));
