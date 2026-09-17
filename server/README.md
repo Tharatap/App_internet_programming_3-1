@@ -18,19 +18,29 @@ SHOW TABLES;                    -- ต้องเห็น 12 ตาราง
 ## ขั้นที่ 2 — เข้าเซิร์ฟเวอร์ผ่าน SSH
 
 ```bash
-ssh <user>@<host> -p <port>
+ssh std6730202645@119.59.102.161 -p 2222
 ```
 
-จดข้อมูล 2 อย่างที่ระบบแจ้งตอน login ไว้ให้ดี:
-- **พอร์ตที่อนุญาตให้เปิดบริการ** (บางเซิร์ฟเวอร์กำหนดมาให้เฉพาะพอร์ตเดียว พอร์ตอื่นถูกไฟร์วอลล์ปิด)
-- **โฟลเดอร์ทำงาน** ที่ให้วางโค้ด (เช่น `/app`)
+ค่าที่ใช้จริงของโปรเจกต์นี้ — เติมไว้ในทุกคำสั่งด้านล่างแล้ว ไม่ต้องแทนที่เอง:
+
+| รายการ | ค่า |
+|---|---|
+| SSH user | `std6730202645` |
+| Host | `119.59.102.161` |
+| SSH port | `2222` |
+| โฟลเดอร์ทำงานบนเซิร์ฟเวอร์ | `/app` |
+| พอร์ตที่เปิดบริการได้ | `3059` (พอร์ตอื่นถูกไฟร์วอลล์ปิด) |
+| ชื่อ database | `ip_std6730202645` |
+
+> ค่า `DB_USER` / `DB_PASSWORD` / `JWT_SECRET` ดูจากไฟล์ `server/.env` บนเครื่องตัวเอง
+
 
 ## ขั้นที่ 3 — อัปโหลดโค้ดขึ้นเซิร์ฟเวอร์
 
 จากเครื่องคุณ (เปิด terminal ใหม่ ไม่ต้องปิด SSH):
 ```bash
 cd MyProfileAppNindam
-scp -P <port> -r server/* <user>@<host>:<โฟลเดอร์ทำงาน>/
+scp -P 2222 -r server/* std6730202645@119.59.102.161:/app/
 ```
 (ไม่ต้องส่งโฟลเดอร์ `node_modules` — ไปติดตั้งบนเซิร์ฟเวอร์เอาเอง)
 
@@ -38,7 +48,7 @@ scp -P <port> -r server/* <user>@<host>:<โฟลเดอร์ทำงาน
 
 กลับไปที่ terminal ที่ SSH ค้างไว้:
 ```bash
-cd <โฟลเดอร์ทำงาน>
+cd /app
 npm install
 cp .env.example .env
 nano .env
@@ -46,11 +56,11 @@ nano .env
 
 กรอกในไฟล์ `.env`:
 ```ini
-PORT=<พอร์ตที่เซิร์ฟเวอร์อนุญาต>
+PORT=3059
 DB_HOST=localhost
 DB_USER=<user ของ MySQL>
 DB_PASSWORD=<รหัสผ่าน MySQL>
-DB_NAME=<ชื่อ database>
+DB_NAME=ip_std6730202645
 JWT_SECRET=<ค่าสุ่ม — สร้างด้วย: openssl rand -hex 32>
 JWT_EXPIRES=7d
 ```
@@ -67,19 +77,22 @@ node server.js
 
 **เปิด terminal ใหม่ในเครื่องคุณ** (อย่าปิดอันที่รันอยู่) แล้วทดสอบ:
 ```bash
-curl http://<host>:<PORT>/api/health
+curl http://119.59.102.161:3059/api/health
 # ต้องได้ {"ok":true}
 
-curl http://<host>:<PORT>/api/products
+curl http://119.59.102.161:3059/api/products
 # ต้องได้ JSON รายการสินค้า 12 ตัว
 
-curl -X POST http://<host>:<PORT>/api/auth/login \
+curl -X POST http://119.59.102.161:3059/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"user@chaje.test","password":"user1234"}'
 # ต้องได้ {"token":"...", "user":{...}}
 ```
 
 ## ขั้นที่ 6 — ทำให้รันค้างแม้ปิด SSH
+
+> **สถานะปัจจุบัน: ยังไม่ได้ตั้ง pm2 บนเซิร์ฟเวอร์** ตอนนี้รันด้วย `node server.js` ค้าง terminal ไว้
+> ปิด SSH เมื่อไหร่ API ดับทันที — ถ้าจะพรีเซนต์ ห้ามปิดหน้าต่างนั้น
 
 กลับไปที่ terminal ที่รัน `node server.js` อยู่ กด `Ctrl+C` หยุดก่อน แล้ว:
 
@@ -99,12 +112,35 @@ disown
 
 ## หลังแก้โค้ด — ต้องทำใหม่ทุกครั้ง
 
-ไม่มี hot reload! แก้โค้ดแล้วต้องอัปโหลดใหม่และรีสตาร์ต:
+ไม่มี hot reload! แก้โค้ดแล้วต้องอัปโหลดใหม่และรีสตาร์ตเสมอ
+
+**ต้องส่งทุกโฟลเดอร์ที่แก้ อย่าส่งแค่ `routes`** — `routes/analytics.js` เรียก `require('../ml/...')`
+ถ้าส่ง `routes` ขึ้นไปโดยไม่มี `ml` เซิร์ฟเวอร์จะขึ้น `Cannot find module` แล้วดับตอนบูตทันที
+
 ```bash
-scp -P <port> -r server/routes <user>@<host>:<โฟลเดอร์ทำงาน>/
-ssh <user>@<host> -p <port> "pm2 restart chaje-api"
+cd MyProfileAppNindam
+scp -P 2222 -r server/ml server/routes server/middleware server/server.js \
+  std6730202645@119.59.102.161:/app/
 ```
-(ถ้าใช้ nohup: SSH เข้าไป `pkill -f server.js` แล้วรัน `nohup node server.js ...` ใหม่)
+
+แล้วรีสตาร์ต — ตอนนี้ยังไม่มี pm2 จึงทำแบบนี้:
+```bash
+ssh std6730202645@119.59.102.161 -p 2222
+cd /app
+pkill -f server.js     # หยุดตัวเก่า (ถ้ายังรันค้างอยู่)
+node server.js         # ทิ้ง terminal นี้ไว้ ห้ามปิด
+```
+
+ถ้าวันหลังตั้ง pm2 แล้ว: `ssh std6730202645@119.59.102.161 -p 2222 "pm2 restart chaje-api"`
+
+**เช็คว่าขึ้นจริง (เปิดอีก terminal ในเครื่องตัวเอง):**
+```bash
+curl http://119.59.102.161:3059/api/health
+# ต้องได้ {"ok":true}
+
+curl http://119.59.102.161:3059/api/analytics/product-clusters
+# ต้องได้ 401 {"message":"ไม่ได้เข้าสู่ระบบ"} = route วิเคราะห์ขึ้นแล้ว
+```
 
 ## จุดที่พลาดบ่อย
 
