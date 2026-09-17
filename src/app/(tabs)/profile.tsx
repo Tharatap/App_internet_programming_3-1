@@ -9,6 +9,7 @@ import {
   Package,
   Settings,
   ShieldCheck,
+  Store,
   Ticket,
   type LucideIcon,
 } from 'lucide-react-native';
@@ -76,6 +77,7 @@ export default function ProfileScreen() {
     ...(isAdminSession
       ? [
           { icon: LayoutDashboard, label: 'แดชบอร์ดวิเคราะห์', href: '/admin/dashboard' as Href },
+          { icon: Store, label: 'เทียบราคาข้ามร้าน', href: '/admin/market' as Href },
           { icon: ShieldCheck, label: 'จัดการสินค้า', href: '/admin/products' },
         ] satisfies MenuItem[]
       : []),

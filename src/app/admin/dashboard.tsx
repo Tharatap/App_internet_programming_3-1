@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { ChevronDown, ChevronRight, ChevronUp, Plus, RefreshCw } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -169,6 +169,14 @@ export default function AdminDashboardScreen() {
             );
           })}
         </View>
+
+        <PressableScale
+          accessibilityRole="button"
+          style={styles.detailsToggle}
+          onPress={() => router.push('/admin/market' as Href)}>
+          <Text style={styles.detailsToggleText}>เทียบราคากับร้านอื่นในกลุ่ม</Text>
+          <ChevronRight size={20} color={Brand.text} strokeWidth={2} />
+        </PressableScale>
 
         <PressableScale style={styles.detailsToggle} onPress={() => setDetailsOpen((open) => !open)}>
           <Text style={styles.detailsToggleText}>รายละเอียด ML</Text>

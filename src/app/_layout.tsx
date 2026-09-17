@@ -94,6 +94,7 @@ function ThemedRootLayout() {
                     <Stack.Screen name="admin/products" />
                     <Stack.Screen name="admin/product-form" />
                     <Stack.Screen name="admin/dashboard" />
+                    <Stack.Screen name="admin/market" />
                   </Stack>
                   <AnimatedSplashOverlay />
                 </View>

@@ -64,14 +64,14 @@ function absoluteFeature(products) {
  * คือของถูกของร้านรถ ส่วน SSD 15,900 บาทคือของแพงสุดของร้านนั้น ทั้งที่ตัวเลขสวนทางกัน
  * โหมด absolute จะบอกได้แค่ว่า "รถแพงกว่ารองเท้า" ซึ่งไม่ต้องใช้ ML ก็รู้
  */
-function relativeFeature(products) {
+function computePercentiles(products) {
   const pricesByStore = new Map();
   products.forEach((p) => {
     if (!pricesByStore.has(p.storeId)) pricesByStore.set(p.storeId, []);
     pricesByStore.get(p.storeId).push(p.price);
   });
 
-  const percentiles = products.map((product) => {
+  return products.map((product) => {
     const prices = pricesByStore.get(product.storeId);
     if (prices.length < 2) return 0.5; // ร้านที่มีสินค้าชิ้นเดียว เทียบกับอะไรไม่ได้ ให้อยู่กลาง
     const less = prices.filter((v) => v < product.price).length;
@@ -79,7 +79,9 @@ function relativeFeature(products) {
     // ใช้ midrank เพื่อให้สินค้าราคาเท่ากันได้ค่าเดียวกันและอยู่กึ่งกลางของช่วงที่ครอง
     return (less + (equal - 1) / 2) / (prices.length - 1);
   });
+}
 
+function relativeFeature(percentiles) {
   return standardize(percentiles);
 }
 
@@ -134,7 +136,10 @@ function analyzeMarket(products, sources, mode, k) {
     };
   }
 
-  const feature = mode === 'absolute' ? absoluteFeature(products) : relativeFeature(products);
+  // คำนวณเปอร์เซ็นไทล์เสมอแม้โหมด absolute จะไม่ได้ใช้จัดกลุ่ม เพราะส่งกลับไปให้หน้าจอ
+  // วาดกราฟได้ และเป็นข้อมูลที่อ่านเข้าใจได้ด้วยตัวเอง ("ของชิ้นนี้แพงอันดับต้น ๆ ของร้าน")
+  const percentiles = computePercentiles(products);
+  const feature = mode === 'absolute' ? absoluteFeature(products) : relativeFeature(percentiles);
   const matrix = feature.map((value) => [value]);
   const result = kmeans(matrix, k);
   const silhouette = silhouetteScore(matrix, result.assignments, k);
@@ -200,6 +205,8 @@ function analyzeMarket(products, sources, mode, k) {
       brand: product.brand,
       category: product.category,
       price: product.price,
+      /** ตำแหน่งราคาภายในร้านตัวเอง 0 = ถูกสุดของร้าน, 1 = แพงสุดของร้าน */
+      percentileInStore: round(percentiles[index], 4),
       clusterId: result.assignments[index],
       tierIndex: tierById.get(result.assignments[index]),
     })),
